@@ -10,6 +10,19 @@ Installation
     pip install pynuance
 
 
+Account Creation
+################
+
+1. Create a Nuance Developer Account here: https://developer.nuance.com/public/index.php?task=register
+2. Go to your email and activate it
+3. Get your credentials (generate credentials.json file)::
+
+    pynuance credentials -u USERNAME -p PASSWORD -c credentials.json
+
+4. 4. 4. 4. Then you can use TTS and STT features
+
+
+
 Usage
 #####
 
@@ -19,7 +32,7 @@ Text To Speech
 
 ::
 
-    pynuance -c credentials.json -l en_US tts -v Allison -c speex -t "Hello World"
+    pynuance tts -c credentials.json -l en_US -v Allison -C speex -t "Hello World"
 
 
 
@@ -28,7 +41,7 @@ Speech To Text
 
 ::
 
-    pynuance -c credentials.json -l en_US stt 
+    pynuance stt -c credentials.json -l en_US
 
 Then say something in your mic
 
@@ -38,19 +51,17 @@ Print help
 ::
 
     pynuance --help
-    usage: pynuance [-h] -c CREDENTIALS -l LANGUAGE {tts,stt} ...
+    usage: pynuance [-h] {tts,stt,credentials} ...
 
     optional arguments:
       -h, --help            show this help message and exit
-      -c CREDENTIALS, --credentials CREDENTIALS
-                            Credential file
-      -l LANGUAGE, --language LANGUAGE
-                            Language
 
     command:
-      {tts,stt}             Command
+      {tts,stt,credentials}
+                            Command
         tts                 Text To Speech
         stt                 Speech To Text
+        credentials         Get Nuance Credentials
 
 Dev env
 #######
