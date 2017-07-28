@@ -14,12 +14,13 @@ Account Creation
 ################
 
 1. Create a Nuance Developer Account here: https://developer.nuance.com/public/index.php?task=register
-2. Go to your email and activate it
-3. Get your credentials (generate credentials.json file)::
+2. Check the box "Yes - request access" in the "Want Mix ?" box
+3. Go to your email and activate it
+4. Get your credentials (generate credentials.json file)::
 
     pynuance credentials -u USERNAME -p PASSWORD -c credentials.json
 
-4. 4. 4. 4. Then you can use TTS and STT features
+5. Then you can use TTS and STT features
 
 
 

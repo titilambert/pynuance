@@ -4,6 +4,7 @@ import sys
 from pynuance.tts import tts
 from pynuance.stt import stt
 from pynuance.tools.credentials import get_credentials
+from pynuance.tools.mix import mix_available
 
 from pynuance.lib import parse_credentials, PyNuanceError
 from pynuance.languages import LANGUAGES
@@ -39,15 +40,32 @@ def main():
                             help='Password')
     parser_cred.add_argument('-c', '--credential-file',
                             help='Credential file')
+    # NLU
+    parser_nlu = subparsers.add_parser("nlu", help="Understand using mic")
+    nlu_subparsers = parser_nlu.add_subparsers(title="subcommand", help="SubCommand", dest="subcommand")
 
+    parser_nlu_audio = nlu_subparsers.add_parser("check", help="Check if mix is activated for your account")
+    parser_nlu_audio.add_argument('-c', '--credentials',
+                            required=True, help='Credential file')
+    parser_nlu_audio.add_argument('-l', '--language',
+                            required=True, help='Language')
+
+    parser_nlu_check = nlu_subparsers.add_parser("check", help="Check if mix is activated for your account")
+    parser_nlu_check.add_argument('-u', '--username',
+                            help='Username')
+    parser_nlu_check.add_argument('-p', '--password',
+                            help='Password')
+    # Parse args
     args = parser.parse_args()
 
 
     if args.command == "credentials":
         # Run get credentials
         get_credentials(args.username, args.password, args.credential_file)
-
-    else:
+    elif args.command == "nlu" and args.subcommand == "check":
+        mix_available(args.username, args.password)
+    # Handle commands
+    elif args.command:
         creds = parse_credentials(args.credentials)
 
         # Check language
@@ -56,8 +74,8 @@ def main():
             print("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
             sys.exit(1)
 
-        # Handle command
-        if args.command == "tts":
+
+        elif args.command == "tts":
             # Check Voice
             if args.voice not in voices_by_lang[args.language]:
                 print("Error: Voice should be in {}".format(', '.join(voices_by_lang[args.language])))
