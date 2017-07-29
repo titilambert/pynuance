@@ -10,7 +10,6 @@ except ImportError:
     speex = None
 
 
-
 from pynuance.logger import LOGGER_ROOT
 from pynuance.websocket import WebsocketConnection
 from pynuance.recorder import Recorder

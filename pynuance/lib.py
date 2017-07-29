@@ -36,4 +36,4 @@ def parse_credentials(file_path):
             if attr not in cred_json.keys():
                 raise PyNuanceError("Missing {} in credentials file".format(attr))
 
-        return cred_json["appId"], cred_json["appKey"]
+        return cred_json["appId"], cred_json["appKey"], cred_json.get("context_tag")

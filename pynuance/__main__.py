@@ -5,9 +5,10 @@ from pynuance.tts import tts
 from pynuance.stt import stt
 from pynuance.tools.credentials import get_credentials
 from pynuance.tools.mix import mix_available
+from pynuance.nlu import nlu_text
 
 from pynuance.lib import parse_credentials, PyNuanceError
-from pynuance.languages import LANGUAGES
+from pynuance.languages import LANGUAGES, NLU_LANGUAGES
 
 
 def main():
@@ -41,17 +42,24 @@ def main():
     parser_cred.add_argument('-c', '--credential-file',
                             help='Credential file')
     # NLU
-    parser_nlu = subparsers.add_parser("nlu", help="Understand using mic")
+    parser_nlu = subparsers.add_parser("nlu", help="NLU - Natural Language Understanding")
     nlu_subparsers = parser_nlu.add_subparsers(title="subcommand", help="SubCommand", dest="subcommand")
 
-    parser_nlu_audio = nlu_subparsers.add_parser("check", help="Check if mix is activated for your account")
+    parser_nlu_audio = nlu_subparsers.add_parser("audio", help="NLU audio using mic")
     parser_nlu_audio.add_argument('-c', '--credentials',
                             required=True, help='Credential file')
     parser_nlu_audio.add_argument('-l', '--language',
                             required=True, help='Language')
 
-    parser_nlu_check = nlu_subparsers.add_parser("check", help="Check if mix is activated for your account")
-    parser_nlu_check.add_argument('-u', '--username',
+    parser_nlu_text = nlu_subparsers.add_parser("text", help="NLU text")
+    parser_nlu_text.add_argument('-c', '--credentials',
+                                 required=True, help='Credential file')
+    parser_nlu_text.add_argument('-l', '--language',
+                                 required=True, help='Language')
+    parser_nlu_text.add_argument('-t', '--text',
+                                 required=True, help='Text')
+    parser_nlu_text.add_argument('-C', '--context_tag',
+                                 required=True, help='Context tag')
                             help='Username')
     parser_nlu_check.add_argument('-p', '--password',
                             help='Password')
@@ -74,8 +82,7 @@ def main():
             print("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
             sys.exit(1)
 
-
-        elif args.command == "tts":
+        if args.command == "tts":
             # Check Voice
             if args.voice not in voices_by_lang[args.language]:
                 print("Error: Voice should be in {}".format(', '.join(voices_by_lang[args.language])))
@@ -87,6 +94,14 @@ def main():
             # Run STT command
             stt(creds[0], creds[1], args.language)
 
+        elif args.command == "nlu" and args.subcommand == "text":
+            # transform language
+            language = NLU_LANGUAGES.get(args.language)
+            if language is None:
+                print("Error: language not supported")
+                sys.exit(3)
+            # Run NLU TEXT command
+            nlu_text(creds[0], creds[1], creds[2], language, args.text)
 
    
 if __name__ == '__main__':
