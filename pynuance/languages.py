@@ -406,3 +406,24 @@ LANGUAGES = {
     ]
   }
 }
+
+
+NLU_LANGUAGES = {
+    "nl_NL": "nld-NLD",
+    "en_US": "eng-USA",
+    "en_AU": "eng-AUS",
+#    "en_GB": "eng-???
+    "fr_FR": "fra-FRA",
+    "fr_CA": "fra-CAN",
+    "de_DE": "deu-DEU",
+    "it_IT": "ita-ITA",
+    "zn_CN": "zho-CHN",
+    "pt_BR": "por-BRA",
+    "pt_PT": "por-PRT",
+    "ru_RU": "rus-RUS",
+    "es_ES": "esp-ESP",
+    "es_US": "esp-USA",
+    "sv_SE": "swe-SWE",
+    "ja_JP": "jap-JPN",
+    "ko_KR": "kor-KOR",
+}

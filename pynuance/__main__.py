@@ -4,7 +4,7 @@ import sys
 from pynuance.tts import tts
 from pynuance.stt import stt
 from pynuance.tools.credentials import get_credentials
-from pynuance.tools.mix import mix_available
+from pynuance.tools.mix import mix_available, create_project, delete_project, list_projects
 from pynuance.nlu import nlu_text
 
 from pynuance.lib import parse_credentials, PyNuanceError
@@ -60,9 +60,39 @@ def main():
                                  required=True, help='Text')
     parser_nlu_text.add_argument('-C', '--context_tag',
                                  required=True, help='Context tag')
+
+    # MIX
+    parser_mix = subparsers.add_parser("mix", help="Nuance Mix Command")
+    mix_subparsers = parser_mix.add_subparsers(title="subcommand", help="SubCommand", dest="subcommand")
+
+    parser_mix_check = mix_subparsers.add_parser("check", help="Check if mix is activated for your account")
+    parser_mix_check.add_argument('-u', '--username',
                             help='Username')
-    parser_nlu_check.add_argument('-p', '--password',
+    parser_mix_check.add_argument('-p', '--password',
                             help='Password')
+
+    parser_mix_create = mix_subparsers.add_parser("create", help="Check if mix is activated for your account")
+    parser_mix_create.add_argument('-u', '--username',
+                                   help='Username')
+    parser_mix_create.add_argument('-p', '--password',
+                                   help='Password')
+    parser_mix_create.add_argument('-l', '--language',
+                                   required=True, help='Language')
+    parser_mix_create.add_argument('-n', '--name',
+                                   required=True, help='Name')
+
+    parser_mix_create = mix_subparsers.add_parser("delete", help="Check if mix is activated for your account")
+    parser_mix_create.add_argument('-u', '--username',
+                                   help='Username')
+    parser_mix_create.add_argument('-p', '--password',
+                                   help='Password')
+    parser_mix_create.add_argument('-n', '--name',
+                                   required=True, help='Name')
+    parser_mix_create = mix_subparsers.add_parser("list", help="Check if mix is activated for your account")
+    parser_mix_create.add_argument('-u', '--username',
+                                   help='Username')
+    parser_mix_create.add_argument('-p', '--password',
+                                   help='Password')
     # Parse args
     args = parser.parse_args()
 
@@ -70,8 +100,22 @@ def main():
     if args.command == "credentials":
         # Run get credentials
         get_credentials(args.username, args.password, args.credential_file)
-    elif args.command == "nlu" and args.subcommand == "check":
-        mix_available(args.username, args.password)
+    elif args.command == "mix":
+        if args.subcommand == "check":
+            mix_available(args.username, args.password)
+        elif args.subcommand == "create":
+            # Check language
+            voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
+            if args.language not in voices_by_lang:
+                print("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
+                sys.exit(1)
+            create_project(args.name, args.language, args.username, args.password)
+        elif args.subcommand == "delete":
+            delete_project(args.name, args.username, args.password)
+        elif args.subcommand == "list":
+            list_projects(args.username, args.password)
+
+
     # Handle commands
     elif args.command:
         creds = parse_credentials(args.credentials)

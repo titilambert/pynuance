@@ -40,11 +40,14 @@ def dev_login(username=None, password=None):
 
 
 
-def _login():
+def mix_login(username=None, password=None):
     # Login
+    if username is None:
+        username = input("Username: ")
+    if password is None:
+        password = input("Nuance dev password: ")
+
     headers = {"Content-Type": "application/json;charset=UTF-8"}
-    username = input("Username: ")
-    password = input("Mix password: ")
     data_login = {"username": username,
                   "password": password}
     result = requests.post("https://developer.nuance.com/mix/nlu/bolt/login", data=json.dumps(data_login), headers=headers)
