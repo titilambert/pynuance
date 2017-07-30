@@ -1,7 +1,5 @@
 import json
 
-
-     
 Accept = {
     'mp3': {
         'mimetype': 'audio/mpeg' # bit rate: 128kbps

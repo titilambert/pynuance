@@ -1,5 +1,6 @@
 __pycache__/
 *.swp
 credentials.json
+cookies.json
 env/
 *.egg-info/

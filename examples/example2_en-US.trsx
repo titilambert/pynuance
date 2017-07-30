@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<project xmlns:nuance="https://developer.nuance.com/mix/nlu/trsx" xml:lang="en-US" nuance:version="2.0">
+  <ontology base="http://developer.nuance.com/mix/nlu/trsx/ontology-1.0">
+    <intents>
+      <intent name="get_time"/>
+      <intent name="get_lang">
+        <links>
+          <link conceptref="language"/>
+        </links>
+      </intent>
+      <intent name="echo">
+        <links>
+          <link conceptref="text"/>
+        </links>
+      </intent>
+    </intents>
+    <concepts>
+      <concept name="text" freetext="true"/>
+      <concept name="language"/>
+    </concepts>
+  </ontology>
+  <dictionaries>
+    <dictionary conceptref="language">
+      <entry literal="english" value="eng-USA"/>
+      <entry literal="french" value="fra-FRA"/>
+    </dictionary>
+  </dictionaries>
+  <samples>
+    <sample intentref="get_time">
+      What time is time ?
+    </sample>
+    <sample intentref="get_lang">
+      Do you understand
+      <annotation conceptref="language">
+        english
+      </annotation>
+    </sample>
+    <sample intentref="get_lang">
+      Can you speak
+      <annotation conceptref="language">
+        french
+      </annotation>
+    </sample>
+    <sample intentref="get_lang">
+      Do you speak
+      <annotation conceptref="language">
+        french
+      </annotation>
+    </sample>
+    <sample intentref="echo">
+      Repeat
+      <annotation conceptref="text">
+        anything
+      </annotation>
+    </sample>
+    <sample intentref="echo">
+      Can you say
+      <annotation conceptref="text">
+        anything
+      </annotation>
+      ?
+    </sample>
+
+  </samples>
+</project>

@@ -1,7 +1,7 @@
 aiohttp==0.16.2
 asyncio==3.4.3
 pyaudio==0.2.8
--e git+https://github.com/NuanceDev/pyspeex.git@0.9.0#egg=pyspeex
+-e git+https://github.com/NuanceDev/pyspeex.git@0.9.0#egg=speex
 #pyspeex
 numpy==1.13.1
 #http://people.csail.mit.edu/hubert/pyaudio/packages/pyaudio-0.2.8.tar.gz

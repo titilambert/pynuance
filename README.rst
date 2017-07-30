@@ -23,10 +23,36 @@ Account Creation
 5. Then you can use TTS and STT features
 
 
-
 Usage
 #####
 
+Download your cookies and creadentials
+======================================
+
+Get Cookies
+-----------
+
+To speed up Nuance websites requests, it's recommended to download your cookies
+
+::
+
+    pynuance cookies -u USERNAME -p PASSWORD -C cookies.json
+
+This will store your cookies in cookies.json file
+
+Get Credentials
+---------------
+
+Then download your credentials needed to use Nuance services
+
+::
+
+    pynuance credentials -C cookies.json -c credentials.json
+
+This will store your credentials in credentials.json file
+
+Use Nuance services
+===================
 
 Text To Speech
 --------------
@@ -46,23 +72,72 @@ Speech To Text
 
 Then say something in your mic
 
+
+NLU
+---
+
+1. Check if you have access to Nuance Mix
+
+::
+
+    pynuance mix -C cookies.json check
+
+If you got `Your Mix account is activated, you can use NLU`, you can use it !
+
+2. Create a new model
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel create -l en_US
+
+3. Upload your data
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel upload -M examples/example1_en-US.trsx
+
+4. Train your model
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel train
+
+5. Create a build
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel build create -N "My first Version"
+
+6. List builds
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel build list
+
+    Version | Status               | Created at          | Notes
+       1 | COMPLETED            | 2017-07-30T19:17:55 | My first Version
+
+7. Attach build to the Sandbox app
+
+::
+
+    pynuance mix -C cookies.json model -m mymodel build attach -T mytag
+
+8. Run NLU command
+
+::
+
+    pynuance nlu  text -c credentials.json -l en_US -T mytag -t "What time is it ?"
+
+
 Print help
-----------
+==========
 
 ::
 
     pynuance --help
-    usage: pynuance [-h] {tts,stt,credentials} ...
-
-    optional arguments:
-      -h, --help            show this help message and exit
-
-    command:
-      {tts,stt,credentials}
-                            Command
-        tts                 Text To Speech
-        stt                 Speech To Text
-        credentials         Get Nuance Credentials
+    ...
+    ...
 
 Dev env
 #######

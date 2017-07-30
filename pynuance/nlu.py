@@ -4,7 +4,7 @@ import binascii
 from pynuance.logger import LOGGER_ROOT
 
 from pynuance.websocket import WebsocketConnection
-from pynuance.languages import NLU_LANGUAGES
+from pynuance.libs.languages import NLU_LANGUAGES
 
 
 _LOGGER_NLU = LOGGER_ROOT.getChild("nlu")
