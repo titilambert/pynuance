@@ -1,3 +1,4 @@
+"""PyNuance main logger"""
 import logging
 
 _FORMAT = '%(asctime)-15s %(filename)-8s %(message)s'

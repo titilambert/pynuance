@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+"""Manage Nuance credentials and cookies"""
 import json
 
 import requests
@@ -11,14 +10,16 @@ from pynuance.mix import mix_activated
 
 
 @nuance_login("dev")
-def get_credentials(username=None, password=None, cookies_file=None):
+def get_credentials(username=None, password=None, cookies_file=None):  # pylint: disable=W0613
     """Get credentials from Nuance dev page"""
     credentials = {"appId": None,
                    "appKey": None,
                    }
     # Go to sandbox page to get credentials
     url = "https://developer.nuance.com/public/index.php"
+    # pylint: disable=E0602
     result = requests.get(url, params={"task": "credentials"}, cookies=cookies)
+    # pylint: enable=E0602
     if result.status_code != 200:
         raise PyNuanceError("Can not go to {}".format(url))
     # parse html page

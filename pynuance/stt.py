@@ -1,3 +1,4 @@
+"""Provides Speech-To-Text functions"""
 import asyncio
 import binascii
 
@@ -7,7 +8,6 @@ try:
     import speex
 except ImportError:
     speex = None
-
 
 from pynuance.logger import LOGGER_ROOT
 from pynuance.websocket import WebsocketConnection
@@ -19,7 +19,6 @@ from pynuance.recorder import Recorder
 FS_NB_CHUNK = 100
 NB_CHUNK = 5
 THRESHOLD = 500
-
 
 _LOGGER_STT = LOGGER_ROOT.getChild("stt")
 
@@ -61,7 +60,9 @@ def _silent_detection(audio, silent_list, first_silent_done, logger):
 
 
 @asyncio.coroutine
-def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_speex=None):
+def do_recognize(loop, url, app_id, app_key, language,  # pylint: disable=R0914,R0914
+                 recorder, logger):
+    """Main function for Speech-To-Text"""
 
     audio = b''
     rawaudio = b''
@@ -89,7 +90,7 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
         'codec': audio_type,
     })
 
-    tp, msg = yield from client.receive()
+    _, msg = yield from client.receive()
     logger.info(msg)  # Should be a connected message
 
     client.send_message({
@@ -179,7 +180,7 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
 
     msg_list = []
     while True:
-        tp, msg = yield from client.receive()
+        _, msg = yield from client.receive()
         logger.debug(msg)
 
         if msg['message'] == 'query_end':
@@ -200,7 +201,7 @@ def speech_to_text(app_id, app_key, language):
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
-        logger.debug("Get New event loop")
+        # logger.debug("Get New event loop")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 

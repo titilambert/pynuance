@@ -1,15 +1,14 @@
 """Module defining abstractWebsocket class"""
 
-import os
-import binascii
 import asyncio
-import json
 import base64
+import binascii
 import hashlib
-
-import aiohttp
+import json
+import os
 import urllib.parse
 
+import aiohttp
 try:
     from aiohttp import websocket
 except ImportError:
@@ -45,8 +44,8 @@ class AbstractWebsocketConnection(object):  # pylint: disable=R0801
         wsmsg = yield from self.stream.read()
         if wsmsg.tp == 1:
             return (self.MSG_JSON, json.loads(wsmsg.data))
-        else:
-            return (self.MSG_AUDIO, wsmsg.data)
+
+        return (self.MSG_AUDIO, wsmsg.data)
 
     def send_message(self, msg):
         """Send json message to the server"""

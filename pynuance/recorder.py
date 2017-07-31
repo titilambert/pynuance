@@ -1,10 +1,12 @@
+"""Provides class to listen to a microphone"""
 import asyncio
-import pyaudio
 import itertools
+
+import pyaudio
 
 
 class Recorder:
-    """Record voice from mic"""
+    """Record voice from microphone"""
 
     def __init__(self, device_index=None, rate=None, channels=None, loop=None):
 
@@ -54,7 +56,7 @@ class Recorder:
     def dequeue(self):  # pylint: disable=C0111
         while True:
             self.queue_event.clear()
-            if len(self.audio_queue):
+            if self.audio_queue:
                 return self.audio_queue.pop(0)
             yield from self.queue_event.wait()
 

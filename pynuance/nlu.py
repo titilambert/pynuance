@@ -1,3 +1,5 @@
+"""Provides Natural Language Understanding functions"""
+
 import asyncio
 import binascii
 
@@ -43,8 +45,8 @@ def understand_text(app_id, app_key, context_tag, language, text):
     if interpretations is False:
         # The user did not speak
         return {}
-    else:
-        return interpretations
+
+    return interpretations
 
 
 @asyncio.coroutine

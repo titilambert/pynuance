@@ -1,3 +1,5 @@
+"""CLI functions wrapper PyNuance functions"""
+
 import json
 import sys
 

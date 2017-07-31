@@ -1,3 +1,4 @@
+"""Entrypoint for CLI"""
 import argparse
 import sys
 
@@ -6,7 +7,7 @@ from pynuance import cli
 from pynuance.libs.common import parse_credentials
 
 
-def main():
+def main():  # pylint: disable=R0912,R0915
     """Main function"""
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(title="command", help="Command", dest="command")

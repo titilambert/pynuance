@@ -1,15 +1,8 @@
-"""Utils functions for Nuance Communications TTS services"""
-# Get from https://github.com/Fadyazmy/harrawr/blob/master/wsclient.py
-
+"""Provides Text-To-Speech functions"""
 import asyncio
-import base64
 import binascii
-import os
-import urllib.parse
 
 import pyaudio
-import aiohttp
-
 try:
     import speex
 except ImportError:
@@ -20,7 +13,7 @@ try:
 except ImportError:
     opus = None
 
-from pynuance.websocket import AbstractWebsocketConnection
+from pynuance.websocket import WebsocketConnection
 from pynuance.logger import LOGGER_ROOT
 from pynuance.libs.languages import LANGUAGES
 from pynuance.libs.error import PyNuanceError
@@ -64,33 +57,6 @@ def _get_opus_decoder_func(decoder):
         opus.decoder.decode(decoder, msg, len(msg), 1920, False, 1)
 
     return decoder_func
-
-
-class WebsocketConnection(AbstractWebsocketConnection):
-    """WebSocket connection object to handle Nuance server communications"""
-
-    def __init__(self, url, logger):
-        AbstractWebsocketConnection.__init__(self, url, logger)
-
-    @asyncio.coroutine
-    def connect(self, app_id, app_key, use_plaintext=True):
-        """Connect to the server"""
-        sec_key = base64.b64encode(os.urandom(16))
-
-        params = {'app_id': app_id, 'algorithm': 'key', 'app_key': binascii.hexlify(app_key)}
-
-        response = yield from aiohttp.request('get',
-                                              self.url + '?' + urllib.parse.urlencode(params),
-                                              headers={'UPGRADE': 'WebSocket',
-                                                       'CONNECTION': 'Upgrade',
-                                                       'SEC-WEBSOCKET-VERSION': '13',
-                                                       'SEC-WEBSOCKET-KEY': sec_key.decode(),
-                                                       })
-
-        if response.status != 101:
-            self._handle_response_101(response)
-
-        self._handshake(response, sec_key)
 
 
 def do_synthesis(url, app_id, app_key, language, voice, codec,
