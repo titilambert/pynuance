@@ -59,7 +59,7 @@ def main():
     parser_mix.add_argument('-p', '--password', help='Password')
     parser_mix.add_argument('-C', '--cookies-file', help='Cookies file')
     # **MIX Check
-    parser_mix_check = mix_subparsers.add_parser("check", help=("Check if mix is activated "
+    mix_subparsers.add_parser("check", help=("Check if mix is activated "
                                                                 "for your account"))
     # **MIX Models
     parser_mixm = mix_subparsers.add_parser("model", help="Manage Mix models")
@@ -68,27 +68,27 @@ def main():
                                                  dest="mix_model_command")
     parser_mixm.add_argument('-m', '--model-name', help='Model name or ID')
     # ***MIX Models list
-    parser_mix_list = mixm_subparsers.add_parser("list", help=("Check if mix is activated "
+    mixm_subparsers.add_parser("list", help=("Check if mix is activated "
                                                                "for your account"))
     # ***MIX Models create
     parser_mix_create = mixm_subparsers.add_parser("create", help=("Check if mix is activated "
                                                                    "for your account"))
     parser_mix_create.add_argument('-l', '--language', required=True, help='Language')
     # ***MIX Models delete
-    parser_mix_delete = mixm_subparsers.add_parser("delete", help=("Check if mix is activated "
+    mixm_subparsers.add_parser("delete", help=("Check if mix is activated "
                                                                    "for your account"))
     # ***MIX Models upload (file)
     parser_mix_upload = mixm_subparsers.add_parser("upload", help="Upload model file")
     parser_mix_upload.add_argument('-M', '--model-file', required=True, help='Model file')
     # ***MIX Models train
-    parser_mix_train = mixm_subparsers.add_parser("train", help="Upload model file")
+    mixm_subparsers.add_parser("train", help="Upload model file")
     # ****MIX Models build
     parser_mixm_build = mixm_subparsers.add_parser("build", help="Manage Mix model buils")
     mixm_build_subparsers = parser_mixm_build.add_subparsers(title="Mix Model build command",
                                                              help="Mix model build Command",
                                                              dest="mix_model_build_command")
     # ****MIX Models Build list
-    parser_mixm_build_list = mixm_build_subparsers.add_parser("list", help="Upload model file")
+    mixm_build_subparsers.add_parser("list", help="Upload model file")
     # ****MIX Models Build create
     parser_mixm_build_create = mixm_build_subparsers.add_parser("create",
                                                                 help="Create a model build")

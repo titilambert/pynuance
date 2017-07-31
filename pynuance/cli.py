@@ -46,7 +46,7 @@ def mix_activated(username=None, password=None, cookies_file=None):
 def list_models(username=None, password=None, cookies_file=None):
     """Print all created models from Nuance Mix."""
     models = mix.list_models(username, password, cookies_file)
-    if len(models) == 0:
+    if not models:
         print("No model")
     else:
         header = " ID    | MODEL NAME                     | LANGUAGE   | CREATED AT"
@@ -112,7 +112,7 @@ def model_build_list(name, username=None, password=None, cookies_file=None):
     except PyNuanceError as exp:
         print("Error: {}".format(exp))
         sys.exit(1)
-    if len(builds) == 0:
+    if not builds:
         print("No build for model {}".format(name))
     else:
         header = " Version | Status               | Created at          | Notes"
@@ -168,7 +168,7 @@ def speech_to_text(app_id, app_key, language, all_=False, raw=False):
         sys.exit(1)
     if raw:
         print(json.dumps(result))
-    elif len(result) == 0:
+    elif not result:
         print("No result from Nuance. Check your microphone volume")
     else:
         if all_:
