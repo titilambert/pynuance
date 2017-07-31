@@ -1,8 +1,9 @@
 import asyncio
 import binascii
 
-from pynuance.logger import LOGGER_ROOT
+import aiohttp
 
+from pynuance.logger import LOGGER_ROOT
 from pynuance.websocket import WebsocketConnection
 from pynuance.libs.languages import NLU_LANGUAGES
 from pynuance.libs.error import PyNuanceError

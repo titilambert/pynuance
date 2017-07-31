@@ -60,7 +60,7 @@ def main():
     parser_mix.add_argument('-C', '--cookies-file', help='Cookies file')
     # **MIX Check
     mix_subparsers.add_parser("check", help=("Check if mix is activated "
-                                                                "for your account"))
+                                             "for your account"))
     # **MIX Models
     parser_mixm = mix_subparsers.add_parser("model", help="Manage Mix models")
     mixm_subparsers = parser_mixm.add_subparsers(title="Mix model command",
@@ -69,14 +69,14 @@ def main():
     parser_mixm.add_argument('-m', '--model-name', help='Model name or ID')
     # ***MIX Models list
     mixm_subparsers.add_parser("list", help=("Check if mix is activated "
-                                                               "for your account"))
+                                             "for your account"))
     # ***MIX Models create
     parser_mix_create = mixm_subparsers.add_parser("create", help=("Check if mix is activated "
                                                                    "for your account"))
     parser_mix_create.add_argument('-l', '--language', required=True, help='Language')
     # ***MIX Models delete
     mixm_subparsers.add_parser("delete", help=("Check if mix is activated "
-                                                                   "for your account"))
+                                               "for your account"))
     # ***MIX Models upload (file)
     parser_mix_upload = mixm_subparsers.add_parser("upload", help="Upload model file")
     parser_mix_upload.add_argument('-M', '--model-file', required=True, help='Model file')
