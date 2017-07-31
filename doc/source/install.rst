@@ -2,6 +2,15 @@
 Installation
 ############
 
+Dependencies
+############
+
+::
+
+    sudo apt-get install libsamplerate0-dev portaudio19-dev libspeexdsp-dev
+
+.. warning:: Need validation
+
 From Pypi
 #########
 

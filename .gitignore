@@ -5,3 +5,6 @@ cookies.json
 env/
 *.egg-info/
 doc/build/
+pytest/
+.coverage.*
+.cache/

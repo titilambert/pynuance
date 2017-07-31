@@ -2,7 +2,7 @@
 PyNuance
 ########
 
-|docs|
+|build| |docs|
 
 PyNuance is a wrapper for Nuance Communications services
 
@@ -28,3 +28,6 @@ WARNING
     :alt: Documentation Status
     :scale: 100%
     :target: http://pynuance.readthedocs.io/en/latest/
+
+.. |build| image:: https://circleci.com/gh/titilambert/pynuance/tree/master.svg?style=svg
+    :target: https://circleci.com/gh/titilambert/pynuance/tree/master
