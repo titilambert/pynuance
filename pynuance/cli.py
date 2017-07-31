@@ -37,16 +37,10 @@ def mix_activated(username=None, password=None, cookies_file=None):
     URL: https://developer.nuance.com/mix/nlu/#/models/
     """
     result = mix.mix_activated(username, password, cookies_file)
-    if result == 0:
+    if result:
         print("Your Mix account is activated, you can use NLU")
-    elif result == 1:
-        print("The Mix team is working on your request, and it won't be long now...")
-    elif result == 2:
-        print("You didn't activate MIX on your account.\n"
-              "Go there https://developer.nuance.com/public/index.php?task=mix \n"
-              "And ask for Nuance Mix.")
     else:
-        print("Mix account state unknown")
+        print("Your Mix account is being created or is not requested")
 
 
 def list_models(username=None, password=None, cookies_file=None):

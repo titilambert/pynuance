@@ -17,10 +17,9 @@ def mix_activated(username=None, password=None, cookies_file=None):
 
     URL: https://developer.nuance.com/mix/nlu/#/models/
 
-    :returns: * 0 means Mix account activated.
-              * 1 means Mix is being created
-              * 2 means demand not done. You have to connect to Nuance website and ask for it
-    :rtype: int
+    :returns: * True means Mix account activated.
+              * False means Mix is being created or not requested
+    :rtype: bool
     """
     # Check mix status
     url = "https://developer.nuance.com/public/index.php"
@@ -32,11 +31,11 @@ def mix_activated(username=None, password=None, cookies_file=None):
     ok_node = soup.find("h4", text="Congratulations!")
 
     if waiting_node.parent.parent.parent.attrs.get('style') != 'display: none':
-        return 1
+        return False
     elif ok_node.parent.parent.parent.attrs.get('style') != 'display: none':
-        return 0
+        return True
     else:
-        return 2
+        raise PyNuanceError("Mix account state unknown")
 
 
 @nuance_login("mix")

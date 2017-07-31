@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 from pynuance.libs.nuance_http import nuance_login, _dev_login, _mix_login
 from pynuance.libs.error import PyNuanceError
+from pynuance.mix import mix_activated
 
 
 @nuance_login("dev")
@@ -38,11 +39,18 @@ def save_cookies(cookies_file, username=None, password=None):
     # login to Nuance dev
     tmp_cookies = _dev_login(username, password)
     dev_cookies = tmp_cookies.get_dict()
-    # login to Nuance mix
-    tmp_cookies = _mix_login(username, password)
-    mix_cookies = tmp_cookies.get_dict()
     # Saving cookies
-    cookies = {"dev": dev_cookies,
-               "mix": mix_cookies}
+    cookies = {"dev": dev_cookies}
     with open(cookies_file, "w") as fhc:
         fhc.write(json.dumps(cookies))
+    # Check if Nuance Mix is activated
+    if mix_activated(None, None, cookies_file) != 0:
+        # login to Nuance Mix
+        tmp_cookies = _mix_login(username, password)
+        mix_cookies = tmp_cookies.get_dict()
+        # Saving cookies
+        cookies = {"dev": dev_cookies,
+                   "mix": mix_cookies}
+        with open(cookies_file, "w") as fhc:
+            fhc.write(json.dumps(cookies))
+    # TODO if not, logit
