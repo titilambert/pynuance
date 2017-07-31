@@ -92,8 +92,10 @@ def nuance_login(website):
                 # Trying to get cookies using username/password
                 if website == "mix":
                     cookies = _mix_login(attr_dict.get('username'), attr_dict.get('password'))
+                    func.__globals__['cookies'] = cookies
                 elif website == "dev":
                     cookies = _dev_login(attr_dict.get('username'), attr_dict.get('password'))
+                    func.__globals__['cookies'] = cookies
                 else:
                     raise PyNuanceError("Bad website parameter")
             return func(*args_, **kwargs_)

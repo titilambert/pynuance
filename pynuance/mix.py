@@ -31,10 +31,10 @@ def mix_activated(username=None, password=None, cookies_file=None):
     waiting_node = soup.find("h4", text="You're on the list!")
     ok_node = soup.find("h4", text="Congratulations!")
 
-    if ok_node.parent.parent.parent.attrs.get('style') != 'display: none':
-        return 0
-    elif waiting_node.parent.parent.parent.attrs.get('style') != 'display: none':
+    if waiting_node.parent.parent.parent.attrs.get('style') != 'display: none':
         return 1
+    elif ok_node.parent.parent.parent.attrs.get('style') != 'display: none':
+        return 0
     else:
         return 2
 
