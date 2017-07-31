@@ -6,6 +6,8 @@ import inspect
 from requests.cookies import cookiejar_from_dict
 import requests
 
+from pynuance.libs.error import PyNuanceError
+
 
 def _dev_login(username=None, password=None):
     """Login to Nuance developer page

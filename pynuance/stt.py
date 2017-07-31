@@ -193,8 +193,11 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
     return msg_list
 
 
-def stt(app_id, app_key, language):
+def speech_to_text(app_id, app_key, language):
+    """Speech to text from mic and return result
 
+    This function auto detect a silence
+    """
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -213,4 +216,4 @@ def stt(app_id, app_key, language):
             logger=_LOGGER_STT,
             ))
         loop.stop()
-        print(output)
+    return output

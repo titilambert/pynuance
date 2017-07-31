@@ -8,10 +8,20 @@ from bs4 import BeautifulSoup
 
 from pynuance.libs.nuance_http import nuance_login
 from pynuance.libs.languages import LANGUAGES
+from pynuance.libs.error import PyNuanceError
+
 
 @nuance_login("dev")
-def mix_available(username=None, password=None, cookies_file=None):
+def mix_activated(username=None, password=None, cookies_file=None):
+    """Check if the account has access to Nuance Mix.
 
+    URL: https://developer.nuance.com/mix/nlu/#/models/
+
+    returns:
+        int: 0 means Mix account activated.
+             1 means Mix is being created
+             2 means demand not done. You have to connect to Nuance website and ask for it
+    """
     # Check mix status
     result = requests.get("https://developer.nuance.com/public/index.php", params={"task": "mix"}, cookies=cookies)
 
@@ -19,23 +29,31 @@ def mix_available(username=None, password=None, cookies_file=None):
     soup = BeautifulSoup(result.text, 'html.parser')
     waiting_node = soup.find("h4", text="You're on the list!")
     ok_node = soup.find("h4", text="Congratulations!")
-    if waiting_node.parent.parent.parent.attrs.get('style') != 'display: none':
-        print("The Mix team is working on your request, and it won't be long now...")
-    elif ok_node.parent.parent.parent.attrs.get('style') != 'display: none':
-        print("Your Mix account is activated, you can use NLU")
+
+    if ok_node.parent.parent.parent.attrs.get('style') != 'display: none':
+        return 0
+    elif waiting_node.parent.parent.parent.attrs.get('style') != 'display: none':
+        return 1
     else:
-        print("You didn't activate MIX on your account.\n"
-              "Go there https://developer.nuance.com/public/index.php?task=mix \n"
-              "And ask for Nuance Mix.")
-    # When is activated ????
+        return 2
+
+
+@nuance_login("mix")
+def list_models(username=None, password=None, cookies_file=None):
+    """Get list of models/project from Nuance Mix."""
+    result = requests.get("https://developer.nuance.com/mix/nlu/api/v1/projects", cookies=cookies)
+    return result.json().get("data", [])
+    # {'name': 'coffeeMaker', 'type': {}, 'stats': {'ontology': {'nbOntologyIntents': 2, 'nbOntologyMentions': 20, 'nbPatterns': 24}, 'nlu': {'verified': 37, 'size': 37}}, 'metadata': {'source': ['Nuance Communications'], 'type': ['sample'], 'version': ['2.0.0'], 'description': ['Sample model for demonstration of 1 simple intent and two concepts'], 'created_by': ['titilambert@gmail.com', 'Thibault Cohen'], 'short_name': ['Coffee Maker Sample Model'], 'last_saved': ['Fri Jul 28 23:37:37 UTC 2017'], 'created_at': ['2017-07-28 20:55:09+00:00']}, 'locale': 'en_US', 'loaded': False, 'languageDomainTopic': 'nma', 'ontology': {'version': '', 'isLoaded': False}, 'sources': [{'name': 'nuance_custom_data', 'version': '1.0', 'displayName': 'nuance_custom_data', 'type': 'CUSTOM'}], 'created': '2017-07-28T20:55:10.156244Z', 'id': 6965}
+
 
 @nuance_login("mix")
 def create_model(name, language, username=None, password=None, cookies_file=None):
+    """Create a new model in Nuance Mix."""
     # Check language
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
     if language not in voices_by_lang:
-        raise Exception("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
-    # POST 1
+        raise PyNuanceError("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
+    # First request
     data = {"name": name,
             "domains": [],
             "locale": language,
@@ -43,13 +61,13 @@ def create_model(name, language, username=None, password=None, cookies_file=None
     headers = {"Content-Type": "application/json;charset=UTF-8"}
     result = requests.post("https://developer.nuance.com/mix/nlu/api/v1/projects", data=json.dumps(data), cookies=cookies, headers=headers)
     if result.status_code  != 200:
-        raise
-    res_json = result.json()
-    model_id = res_json.get("id")
+        raise PyNuanceError("Unknown HTTP error on the first request")
+    model_json = result.json()
+    model_id = model_json.get("id")
     if model_id is None:
-        raise
-    #{"id": 6967, "name": "MODELNAME", "created": "2017-07-28T22:27:03.253884Z", "builds": [], "collaborators": [{"id": 6344, "name": "Thibault Cohen", "first_name": "Thibault", "last_name": "Cohen", "email": "titilambert@gmail.com", "telephone_num": null, "created_at": "2017-07-27T20:00:04.140590Z", "last_logged_in": "2017-07-28T20:54:20.902053Z", "thumbnail_url": "//www.gravatar.com/avatar/1e569dd79391d30b362b399c2629ac6e?d=https%3A%2F%2Fdeveloper.nuance.com%2Fmix%2Fnlu%2Fimages%2Fdefault_avatar_1.png&s=150", "lang": "en", "is_super_admin": false, "companies": []}], "owners": [6344], "domains": [], "notes": null, "languageDomainTopic": "nma", "locale": "en_US", "stats": {"ontology": {"nbPatterns": 0, "nbOntologyIntents": 1, "nbOntologyMentions": 18}, "nlu": {"verified": 0, "size": 0}}}
-    # POST 2
+        raise PyNuanceError("The HTTP create request did not return the new model ID")
+        #{"id": 6967, "name": "MODELNAME", "created": "2017-07-28T22:27:03.253884Z", "builds": [], "collaborators": [{"id": 6344, "name": "Thibault Cohen", "first_name": "Thibault", "last_name": "Cohen", "email": "titilambert@gmail.com", "telephone_num": null, "created_at": "2017-07-27T20:00:04.140590Z", "last_logged_in": "2017-07-28T20:54:20.902053Z", "thumbnail_url": "//www.gravatar.com/avatar/1e569dd79391d30b362b399c2629ac6e?d=https%3A%2F%2Fdeveloper.nuance.com%2Fmix%2Fnlu%2Fimages%2Fdefault_avatar_1.png&s=150", "lang": "en", "is_super_admin": false, "companies": []}], "owners": [6344], "domains": [], "notes": null, "languageDomainTopic": "nma", "locale": "en_US", "stats": {"ontology": {"nbPatterns": 0, "nbOntologyIntents": 1, "nbOntologyMentions": 18}, "nlu": {"verified": 0, "size": 0}}}
+    # Second request
     data = {"session_id": "-1",
             "project_id": "-1",
             "page": "/models/",
@@ -64,36 +82,30 @@ def create_model(name, language, username=None, password=None, cookies_file=None
     result = requests.post("https://developer.nuance.com/mix/nlu/bolt/ubt", data=json.dumps(data), cookies=cookies)
     res_json = result.json()
     if res_json != {}:
-        raise 
-    # PUT 3
+        raise PyNuanceError("Unknown HTTP error on the second request")
+    # Third request
     url_put_3 = "https://developer.nuance.com/mix/nlu/api/v1/projects/{}".format(model_id)
-    result = requests.put(url_put_3, cookies=cookies)
-
-
-@nuance_login("mix")
-def _list_models(username=None, password=None, cookies_file=None):
-    result = requests.get("https://developer.nuance.com/mix/nlu/api/v1/projects", cookies=cookies)
-    return result.json().get("data", [])
-
-def list_models(username=None, password=None, cookies_file=None):
-    """get model list from mix"""
-    models = _list_models(username, password, cookies_file)
-    if len(models) == 0:
-        print("No model")
-    else:
-        for model in models:
-            # {'name': 'coffeeMaker', 'type': {}, 'stats': {'ontology': {'nbOntologyIntents': 2, 'nbOntologyMentions': 20, 'nbPatterns': 24}, 'nlu': {'verified': 37, 'size': 37}}, 'metadata': {'source': ['Nuance Communications'], 'type': ['sample'], 'version': ['2.0.0'], 'description': ['Sample model for demonstration of 1 simple intent and two concepts'], 'created_by': ['titilambert@gmail.com', 'Thibault Cohen'], 'short_name': ['Coffee Maker Sample Model'], 'last_saved': ['Fri Jul 28 23:37:37 UTC 2017'], 'created_at': ['2017-07-28 20:55:09+00:00']}, 'locale': 'en_US', 'loaded': False, 'languageDomainTopic': 'nma', 'ontology': {'version': '', 'isLoaded': False}, 'sources': [{'name': 'nuance_custom_data', 'version': '1.0', 'displayName': 'nuance_custom_data', 'type': 'CUSTOM'}], 'created': '2017-07-28T20:55:10.156244Z', 'id': 6965}
-            print("{id:6d} - {name:30s} - {locale} - {created}".format(**model))
+    requests.put(url_put_3, cookies=cookies)
+    # Result model
+    return model_json
 
 
 def get_model_id(name, username=None, password=None, cookies_file=None):
-    models = _list_models(username, password, cookies_file)
+    """Get model ID from model name.
+
+    If name is already a model ID, this function can help to validate the existance of the model.
+
+    Raise if there are 2 or more models with the same name.
+    """
+    models = list_models(username, password, cookies_file)
 
     model_id = None
     for model in models:
-        if model.get("name") == name:
+        if model.get("name") == name and model_id is not None:
+            raise PyNuanceError("There at least two models with the same name. "
+                                "Please use the model ID instead")
+        elif model.get("name") == name:
             model_id = model.get("id")
-            break
         try:
             if model.get("id") == int(name):
                 model_id = int(name)
@@ -101,13 +113,14 @@ def get_model_id(name, username=None, password=None, cookies_file=None):
         except ValueError:
             pass
     if model_id is None:
-        raise Exception("Project not found")
+        raise PyNuanceError("Model '{}' not found".format(name))
 
     return model_id
 
 
 @nuance_login("mix")
 def delete_model(name, username=None, password=None, cookies_file=None):
+    """Delete a model from model name or model ID"""
     model_id = get_model_id(name, username, password, cookies_file)
 
     data = {"session_id": "-1",
@@ -134,6 +147,7 @@ def delete_model(name, username=None, password=None, cookies_file=None):
 
 @nuance_login("mix")
 def upload_model(name, model_file, username=None, password=None, cookies_file=None):
+    """Upload intent file into a Mix model"""
     # Get 
     model_id = get_model_id(name, username, password, cookies_file)
 
@@ -151,7 +165,7 @@ def upload_model(name, model_file, username=None, password=None, cookies_file=No
 
 
 @nuance_login("mix")
-def model_train(name, username=None, password=None, cookies_file=None):
+def train_model(name, username=None, password=None, cookies_file=None):
     print("Training: {}".format(name))
     # Get model ID
     model_id = get_model_id(name, username, password, cookies_file)
@@ -172,9 +186,8 @@ def get_model(name, username=None, password=None, cookies_file=None):
     return result.json()
 
 
-@nuance_login("mix")
-def model_version(name, notes="", username=None, password=None, cookies_file=None):
-    print("Versionning: {}".format(name))
+def model_build_create(name, notes="", username=None, password=None, cookies_file=None):
+    """Create a new model build."""
     # Get model ID
     model_id = get_model_id(name, username, password, cookies_file)
     # Send Request
@@ -184,20 +197,14 @@ def model_version(name, notes="", username=None, password=None, cookies_file=Non
     # TODO check build status each second to wait completion
 
 
-@nuance_login("mix")
-def model_version_list(name, username=None, password=None, cookies_file=None):
-    # Get model
+def model_build_list(name, username=None, password=None, cookies_file=None):
+    """Return the list of all builds for a given model"""
     model = get_model(name, username, password, cookies_file)
+    return model.get("builds", [])
 
-    header = " Version | Status               | Created at          | Notes"
-    print(header)
-    for build in model.get("builds", []):
-        build["created_at"] = build["created_at"][:19]
-        line = "{version:8d} | {build_status:20s} | {created_at} | {notes}".format(**build)
-        print(line)
 
 @nuance_login("mix")
-def model_attach(name, build_version=None, context_tag="latest", username=None, password=None, cookies_file=None):
+def model_build_attach(name, build_version=None, context_tag="latest", username=None, password=None, cookies_file=None):
     """Attach model version to a Nuance App
 
     For now, only SandBoxApp is supported by pynuance
@@ -229,17 +236,16 @@ def model_attach(name, build_version=None, context_tag="latest", username=None, 
     result = requests.get(url, cookies=cookies)
     nmaids = [app['nmaid'] for app in result.json()['data'] if app['app_id'] == app_id]
     if len(nmaids) < 1:
-        raise Exception("Can not get nmaid")
+        raise PyNuanceError("Can not get nmaid")
     nmaid = nmaids[0]
     # Attach
-    print("attaching: {}".format(name))
     data = {"nmaid": nmaid,
             "project_id": model_id, "tag": context_tag}
     url = "https://developer.nuance.com/mix/nlu/bolt/applications/{}/configurations".format(app_id)
     result = requests.post(url, data=json.dumps(data), cookies=cookies, headers=headers)
     conf_id = result.json().get("id")
     if conf_id is None:
-        raise
+        raise PyNuanceError("Can not find configuration ID")
 
     data = {"page": "/model/{}/publish".format(model_id),
             "query_params": {},
@@ -263,5 +269,4 @@ def model_attach(name, build_version=None, context_tag="latest", username=None, 
                  "build_version": "{}".format(build_version)}]
     else:
         data = [{"model_id": "{}".format(model_id)}]
-    result = requests.put(url, data=json.dumps(data), cookies=cookies, headers=headers)
-
+    requests.put(url, data=json.dumps(data), cookies=cookies, headers=headers)

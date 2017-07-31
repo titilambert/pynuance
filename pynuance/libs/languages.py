@@ -135,7 +135,7 @@ LANGUAGES = {
   "French": {
     "code": "fr_FR",
     "voice": [
-      "Audrey-ML*",
+      "Audrey",
       "Virginie",
       "Sebastien",
       "Thomas"

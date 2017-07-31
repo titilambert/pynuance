@@ -22,7 +22,8 @@ except ImportError:
 
 from pynuance.websocket import AbstractWebsocketConnection
 from pynuance.logger import LOGGER_ROOT
-from pynuance.lib import CODECS
+from pynuance.libs.languages import LANGUAGES
+from pynuance.libs.error import PyNuanceError
 
 AUDIO_TYPES = [
     'audio/x-speex;mode=wb',
@@ -197,9 +198,18 @@ def do_synthesis(url, app_id, app_key, language, voice, codec,
     audio_player.terminate()
 
 
-def tts(app_id, app_key, lang, voice, codec, text):
+def text_to_speech(app_id, app_key, language, voice, codec, text):
+    """Read a text with a given language, voice and code"""
+    voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
+    if language not in voices_by_lang:
+        raise PyNuanceError("Language should be in "
+                            "{}".format(", ".join(voices_by_lang.keys())))
+    if voice not in voices_by_lang[language]:
+        raise PyNuanceError("Voice should be in "
+                            "{}".format(', '.join(voices_by_lang[language])))
+
     _loop = asyncio.get_event_loop()
     _loop.run_until_complete(do_synthesis("https://ws.dev.nuance.com/v1/",
-                             app_id, binascii.unhexlify(app_key), lang, voice, codec,
+                             app_id, binascii.unhexlify(app_key), language, voice, codec,
                              text, logger=_LOGGER_TTS))
     _loop.stop()

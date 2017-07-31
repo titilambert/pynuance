@@ -5,13 +5,20 @@ from pynuance.logger import LOGGER_ROOT
 
 from pynuance.websocket import WebsocketConnection
 from pynuance.libs.languages import NLU_LANGUAGES
+from pynuance.libs.error import PyNuanceError
 
 
 _LOGGER_NLU = LOGGER_ROOT.getChild("nlu")
 
 
-def nlu_text(app_id, app_key, context_tag, language, text):
+def understand_text(app_id, app_key, context_tag, language, text):
     """Nlu text wrapper"""
+    # transform language
+    nlu_language = NLU_LANGUAGES.get(language)
+    if nlu_language is None:
+        raise PyNuanceError("Language should be in "
+                            "{}".format(", ".join(NLU_LANGUAGES.keys())))
+
     # Reload config from file because we are in an other Process
     _LOGGER_NLU.debug("Text received: {}".format(text))
     try:
@@ -28,7 +35,7 @@ def nlu_text(app_id, app_key, context_tag, language, text):
                   binascii.unhexlify(app_key),
                   context_tag,
                   text,
-                  language,
+                  nlu_language,
                   _LOGGER_NLU,
                   ))
     # loop.close()
@@ -94,5 +101,4 @@ def _nlu_text(url, app_id, app_key, context_tag, text_to_understand, language, l
         ret = msg
 
     client.close()
-    print(ret)
     return ret

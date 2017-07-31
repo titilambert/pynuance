@@ -1,5 +1,7 @@
 import json
 
+from pynuance.libs.error import PyNuanceError
+
 Accept = {
     'mp3': {
         'mimetype': 'audio/mpeg' # bit rate: 128kbps
@@ -20,10 +22,6 @@ Accept = {
 }
 
 CODECS = ('wav', 'speex', 'opus')
-
-
-class PyNuanceError(Exception):
-    pass
 
 
 def parse_credentials(file_path):
