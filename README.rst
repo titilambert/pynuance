@@ -2,7 +2,7 @@
 PyNuance
 ########
 
-|build| |docs|
+|docs| |codeclimate| |build| 
 
 PyNuance is a wrapper for Nuance Communications services
 
@@ -31,3 +31,8 @@ WARNING
 
 .. |build| image:: https://circleci.com/gh/titilambert/pynuance/tree/master.svg?style=svg
     :target: https://circleci.com/gh/titilambert/pynuance/tree/master
+
+.. |codeclimate| image:: https://codeclimate.com/github/titilambert/pynuance/badges/gpa.svg
+   :target: https://codeclimate.com/github/titilambert/pynuance
+   :alt: Code Climate
+

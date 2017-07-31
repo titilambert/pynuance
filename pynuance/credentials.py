@@ -3,7 +3,6 @@
 import json
 
 import requests
-from requests.cookies import cookiejar_from_dict
 from bs4 import BeautifulSoup
 
 from pynuance.libs.nuance_http import nuance_login, _dev_login, _mix_login

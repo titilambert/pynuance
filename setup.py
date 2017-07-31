@@ -23,7 +23,14 @@ setup(name='pynuance',
               'pynuance = pynuance.__main__:main'
           ]
       },
+      package_data={'': ['LICENSE.txt'], },
       package_dir={'pynuance': 'pynuance'},
       install_requires=[str(r.req) for r in install_reqs],
       tests_require=[str(r.req) for r in test_reqs],
+      include_package_data=True,
+      license='Apache 2.0',
+      classifiers=(
+        'Programming Language :: Python :: 3.5',
+      )
+
 )

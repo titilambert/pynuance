@@ -18,13 +18,14 @@ dependencies:
     - pip install -r requirements.txt --upgrade
     - pip install -r test_requirements.txt --upgrade
     - pip install codeclimate-test-reporter
-    - python setup.py install
 
 test:
   override:
+    - python setup.py develop
+    - pynuance cookies -u $PYNUANCE_USERNAME -p $PYNUANCE_PASSWORD -C `pwd`/cookies.json
     - pycodestyle --max-line-length=100 pynuance
     - pylint --rcfile=.pylintrc -r no pynuance
-    - pytest --html=pytest/report.html --junit-xml=pytest/junit.xml --cov=pynuance/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests/ 
+    - PYNUANCE_COOKIES=`pwd`/cookies.json PYNUANCE_CREDENTIALS=`pwd`/credentials.json pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=pynuance/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests/ 
     - CODECLIMATE_REPO_TOKEN=${CODECLIMATE_REPO_TOKEN} codeclimate-test-reporter
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/xunit/

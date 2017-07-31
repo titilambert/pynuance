@@ -4,8 +4,6 @@ import sys
 from pynuance import cli
 
 from pynuance.libs.common import parse_credentials
-from pynuance.libs.error import PyNuanceError
-from pynuance.libs.languages import NLU_LANGUAGES
 
 
 def main():
