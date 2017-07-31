@@ -17,10 +17,10 @@ def mix_activated(username=None, password=None, cookies_file=None):
 
     URL: https://developer.nuance.com/mix/nlu/#/models/
 
-    returns:
-        int: 0 means Mix account activated.
-             1 means Mix is being created
-             2 means demand not done. You have to connect to Nuance website and ask for it
+    :returns: * 0 means Mix account activated.
+              * 1 means Mix is being created
+              * 2 means demand not done. You have to connect to Nuance website and ask for it
+    :rtype: int
     """
     # Check mix status
     result = requests.get("https://developer.nuance.com/public/index.php", params={"task": "mix"}, cookies=cookies)

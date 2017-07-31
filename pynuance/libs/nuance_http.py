@@ -5,6 +5,7 @@ import inspect
 
 from requests.cookies import cookiejar_from_dict
 import requests
+from functools import wraps
 
 from pynuance.libs.error import PyNuanceError
 
@@ -36,7 +37,7 @@ def _dev_login(username=None, password=None):
     account_result = requests.get(url, params=params, cookies=result.cookies)
 
     if account_result.text.find("Edit My Profile") == -1:
-        raise Exception("Can not login to Nuance dev")
+        raise PyNuanceError("Can not login to Nuance dev")
     return result.cookies
 
 
@@ -52,12 +53,13 @@ def _mix_login(username=None, password=None):
                   "password": password}
     result = requests.post("https://developer.nuance.com/mix/nlu/bolt/login", data=json.dumps(data_login), headers=headers)
     if not result.json().get('status', False):
-        raise Exception("Can not connect")
+        raise PyNuanceError("Can not connect")
     return result.cookies
 
 
 def nuance_login(website):
     def deco(func):
+        @wraps(func)
         def wrapper(*args_, **kwargs_):
             # Get cookies
             func_args = inspect.getargspec(func)
@@ -70,7 +72,7 @@ def nuance_login(website):
                 if attr not in func_args.args:
                     error_msg = ("Can not use Nuance login decorator for `{}`"
                                  " function. Arg `{}` missing".format(func.__name__, attr))
-                    raise Exception(error_msg)
+                    raise PyNuanceError(error_msg)
                 arg_ind = func_args.args.index(attr)
                 try:
                     attr_dict[attr] = args_[arg_ind]
@@ -92,7 +94,7 @@ def nuance_login(website):
                 elif website == "dev":            
                     cookies = _dev_login(attr_dict.get('username'), attr_dict.get('password'))
                 else:
-                    raise
+                    raise PyNuanceError("Bad website parameter")
             return func(*args_, **kwargs_)
         return wrapper
     return deco

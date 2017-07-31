@@ -194,7 +194,7 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
 
 
 def speech_to_text(app_id, app_key, language):
-    """Speech to text from mic and return result
+    """Speech to text from mic and return result.
 
     This function auto detect a silence
     """

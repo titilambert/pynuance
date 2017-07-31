@@ -4,3 +4,4 @@ credentials.json
 cookies.json
 env/
 *.egg-info/
+doc/build/

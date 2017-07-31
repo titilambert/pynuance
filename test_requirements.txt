@@ -1,1 +1,4 @@
 pycodestyle
+sphinx==1.6.3
+sphinxcontrib-mermaid==0.2
+sphinx_rtd_theme==0.2.4

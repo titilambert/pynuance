@@ -1,0 +1,7 @@
+div.section {
+    opacity: 1; 
+}
+
+div.mermaid * .section {
+    opacity: 0.4; 
+}
