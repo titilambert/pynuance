@@ -23,7 +23,8 @@ def mix_activated(username=None, password=None, cookies_file=None):
     :rtype: int
     """
     # Check mix status
-    result = requests.get("https://developer.nuance.com/public/index.php", params={"task": "mix"}, cookies=cookies)
+    url = "https://developer.nuance.com/public/index.php"
+    result = requests.get(url, params={"task": "mix"}, cookies=cookies)
 
     # If "You're on the list!" is here, you just have to wait
     soup = BeautifulSoup(result.text, 'html.parser')
@@ -43,7 +44,6 @@ def list_models(username=None, password=None, cookies_file=None):
     """Get list of models/project from Nuance Mix."""
     result = requests.get("https://developer.nuance.com/mix/nlu/api/v1/projects", cookies=cookies)
     return result.json().get("data", [])
-    # {'name': 'coffeeMaker', 'type': {}, 'stats': {'ontology': {'nbOntologyIntents': 2, 'nbOntologyMentions': 20, 'nbPatterns': 24}, 'nlu': {'verified': 37, 'size': 37}}, 'metadata': {'source': ['Nuance Communications'], 'type': ['sample'], 'version': ['2.0.0'], 'description': ['Sample model for demonstration of 1 simple intent and two concepts'], 'created_by': ['titilambert@gmail.com', 'Thibault Cohen'], 'short_name': ['Coffee Maker Sample Model'], 'last_saved': ['Fri Jul 28 23:37:37 UTC 2017'], 'created_at': ['2017-07-28 20:55:09+00:00']}, 'locale': 'en_US', 'loaded': False, 'languageDomainTopic': 'nma', 'ontology': {'version': '', 'isLoaded': False}, 'sources': [{'name': 'nuance_custom_data', 'version': '1.0', 'displayName': 'nuance_custom_data', 'type': 'CUSTOM'}], 'created': '2017-07-28T20:55:10.156244Z', 'id': 6965}
 
 
 @nuance_login("mix")
@@ -52,21 +52,22 @@ def create_model(name, language, username=None, password=None, cookies_file=None
     # Check language
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
     if language not in voices_by_lang:
-        raise PyNuanceError("Error: language should be in {}".format(', '.join(voices_by_lang.keys())))
+        raise PyNuanceError("Error: language should be in "
+                            "{}".format(', '.join(voices_by_lang.keys())))
     # First request
     data = {"name": name,
             "domains": [],
             "locale": language,
             "sources": []}
     headers = {"Content-Type": "application/json;charset=UTF-8"}
-    result = requests.post("https://developer.nuance.com/mix/nlu/api/v1/projects", data=json.dumps(data), cookies=cookies, headers=headers)
-    if result.status_code  != 200:
+    url = "https://developer.nuance.com/mix/nlu/api/v1/projects"
+    result = requests.post(url, data=json.dumps(data), cookies=cookies, headers=headers)
+    if result.status_code != 200:
         raise PyNuanceError("Unknown HTTP error on the first request")
     model_json = result.json()
     model_id = model_json.get("id")
     if model_id is None:
         raise PyNuanceError("The HTTP create request did not return the new model ID")
-        #{"id": 6967, "name": "MODELNAME", "created": "2017-07-28T22:27:03.253884Z", "builds": [], "collaborators": [{"id": 6344, "name": "Thibault Cohen", "first_name": "Thibault", "last_name": "Cohen", "email": "titilambert@gmail.com", "telephone_num": null, "created_at": "2017-07-27T20:00:04.140590Z", "last_logged_in": "2017-07-28T20:54:20.902053Z", "thumbnail_url": "//www.gravatar.com/avatar/1e569dd79391d30b362b399c2629ac6e?d=https%3A%2F%2Fdeveloper.nuance.com%2Fmix%2Fnlu%2Fimages%2Fdefault_avatar_1.png&s=150", "lang": "en", "is_super_admin": false, "companies": []}], "owners": [6344], "domains": [], "notes": null, "languageDomainTopic": "nma", "locale": "en_US", "stats": {"ontology": {"nbPatterns": 0, "nbOntologyIntents": 1, "nbOntologyMentions": 18}, "nlu": {"verified": 0, "size": 0}}}
     # Second request
     data = {"session_id": "-1",
             "project_id": "-1",
@@ -79,7 +80,8 @@ def create_model(name, language, username=None, password=None, cookies_file=None
             "action": "create",
             "label": name,
             "value": ""}
-    result = requests.post("https://developer.nuance.com/mix/nlu/bolt/ubt", data=json.dumps(data), cookies=cookies)
+    url = "https://developer.nuance.com/mix/nlu/bolt/ubt"
+    result = requests.post(url, data=json.dumps(data), cookies=cookies)
     res_json = result.json()
     if res_json != {}:
         raise PyNuanceError("Unknown HTTP error on the second request")
@@ -125,30 +127,32 @@ def delete_model(name, username=None, password=None, cookies_file=None):
 
     data = {"session_id": "-1",
             "project_id": "-1",
-            "page":"/model/{}/dashboard".format(model_id),
-            "query_params":{},
-            "host":"developer.nuance.com",
-            "port":"",
-            "protocol":"https",
-            "category":"model",
-            "action":"delete",
-            "label":"cancelled",
+            "page": "/model/{}/dashboard".format(model_id),
+            "query_params": {},
+            "host": "developer.nuance.com",
+            "port": "",
+            "protocol": "https",
+            "category": "model",
+            "action": "delete",
+            "label": "cancelled",
             "value": model_id}
 
-    result = requests.post("https://developer.nuance.com/mix/nlu/bolt/ubt", data=json.dumps(data), cookies=cookies)
-    
+    url = "https://developer.nuance.com/mix/nlu/bolt/ubt"
+    result = requests.post(url, data=json.dumps(data), cookies=cookies)
+
     if result.status_code != 200:
         raise
 
-    result = requests.delete("https://developer.nuance.com/mix/nlu/api/v1/projects/{}".format(model_id), cookies=cookies)
+    url = "https://developer.nuance.com/mix/nlu/api/v1/projects/{}".format(model_id)
+    result = requests.delete(url, cookies=cookies)
     if result.status_code != 204:
         raise
 
 
 @nuance_login("mix")
 def upload_model(name, model_file, username=None, password=None, cookies_file=None):
-    """Upload intent file into a Mix model"""
-    # Get 
+    """Upload intent file into a Mix model."""
+    # Get model ID
     model_id = get_model_id(name, username, password, cookies_file)
 
     # Send file
@@ -204,7 +208,8 @@ def model_build_list(name, username=None, password=None, cookies_file=None):
 
 
 @nuance_login("mix")
-def model_build_attach(name, build_version=None, context_tag="latest", username=None, password=None, cookies_file=None):
+def model_build_attach(name, build_version=None, context_tag="latest",
+                       username=None, password=None, cookies_file=None):
     """Attach model version to a Nuance App
 
     For now, only SandBoxApp is supported by pynuance
@@ -212,7 +217,7 @@ def model_build_attach(name, build_version=None, context_tag="latest", username=
     headers = {"Content-Type": "application/json;charset=UTF-8"}
     # Get model ID
     model = get_model(name, username, password, cookies_file)
-    model_id = model.get("id") 
+    model_id = model.get("id")
     # Get buildID
     build_id = None
     if build_version is not None:
@@ -249,20 +254,22 @@ def model_build_attach(name, build_version=None, context_tag="latest", username=
 
     data = {"page": "/model/{}/publish".format(model_id),
             "query_params": {},
-            "host":"developer.nuance.com",
-            "port":443,
-            "protocol":"https",
-            "category":"publish",
-            "action":"associate-to-app",
-            "label":"finish",
-            "value":""}
+            "host": "developer.nuance.com",
+            "port": 443,
+            "protocol": "https",
+            "category": "publish",
+            "action": "associate-to-app",
+            "label": "finish",
+            "value": ""}
     url = "https://developer.nuance.com/mix/nlu/bolt/ubt"
     result = requests.post(url, data=json.dumps(data), cookies=cookies, headers=headers)
 
-    url = "https://developer.nuance.com/mix/nlu/bolt/applications/{}/configurations/{}/settings".format(app_id, conf_id)
+    url = ("https://developer.nuance.com/mix/nlu/bolt/applications/{}/"
+           "configurations/{}/settings".format(app_id, conf_id))
     result = requests.put(url, data=json.dumps({}), cookies=cookies, headers=headers)
 
-    url = "https://developer.nuance.com/mix/nlu/bolt/applications/{}/configurations/{}/models".format(app_id, conf_id)
+    url = ("https://developer.nuance.com/mix/nlu/bolt/applications/{}/"
+           "configurations/{}/models".format(app_id, conf_id))
     if build_id is not None:
         data = [{"model_id": "{}".format(model_id),
                  "build_id": "{}".format(build_id),

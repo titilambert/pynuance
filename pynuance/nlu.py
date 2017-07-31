@@ -45,6 +45,7 @@ def understand_text(app_id, app_key, context_tag, language, text):
     else:
         return interpretations
 
+
 @asyncio.coroutine
 def _nlu_text(url, app_id, app_key, context_tag, text_to_understand, language, logger):
     """Try to understand text"""

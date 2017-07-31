@@ -51,7 +51,8 @@ def _mix_login(username=None, password=None):
     headers = {"Content-Type": "application/json;charset=UTF-8"}
     data_login = {"username": username,
                   "password": password}
-    result = requests.post("https://developer.nuance.com/mix/nlu/bolt/login", data=json.dumps(data_login), headers=headers)
+    url = "https://developer.nuance.com/mix/nlu/bolt/login"
+    result = requests.post(url, data=json.dumps(data_login), headers=headers)
     if not result.json().get('status', False):
         raise PyNuanceError("Can not connect")
     return result.cookies
@@ -82,7 +83,7 @@ def nuance_login(website):
                 if attr_dict[attr] is None:
                     # Trying to get value in kwargs
                     attr_dict[attr] = kwargs_.get(attr)
-                
+
             if attr_dict["cookies_file"] is not None:
                 # Using old cookies
                 cookies = get_cookies(attr_dict["cookies_file"], website)
@@ -91,7 +92,7 @@ def nuance_login(website):
                 # Trying to get cookies using username/password
                 if website == "mix":
                     cookies = _mix_login(attr_dict.get('username'), attr_dict.get('password'))
-                elif website == "dev":            
+                elif website == "dev":
                     cookies = _dev_login(attr_dict.get('username'), attr_dict.get('password'))
                 else:
                     raise PyNuanceError("Bad website parameter")

@@ -164,6 +164,7 @@ def text_to_speech(app_id, app_key, lang, voice, codec, text):
         sys.exit(1)
     print('Text "{}" should be said'.format(text))
 
+
 def speech_to_text(app_id, app_key, language, all_=False, raw=False):
     """Speech to text from mic and print result."""
     try:

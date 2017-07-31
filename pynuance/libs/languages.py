@@ -412,7 +412,6 @@ NLU_LANGUAGES = {
     "nl_NL": "nld-NLD",
     "en_US": "eng-USA",
     "en_AU": "eng-AUS",
-#    "en_GB": "eng-???
     "fr_FR": "fra-FRA",
     "fr_CA": "fra-CAN",
     "de_DE": "deu-DEU",
@@ -427,3 +426,4 @@ NLU_LANGUAGES = {
     "ja_JP": "jap-JPN",
     "ko_KR": "kor-KOR",
 }
+#    "en_GB": "eng-???

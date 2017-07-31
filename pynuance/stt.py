@@ -24,6 +24,7 @@ THRESHOLD = 500
 
 _LOGGER_STT = LOGGER_ROOT.getChild("stt")
 
+
 def _silent_detection(audio, silent_list, first_silent_done, logger):
     """Analyse audio chunk to determine if this is a silent
 
@@ -90,13 +91,13 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
     })
 
     tp, msg = yield from client.receive()
-    logger.info(msg) # Should be a connected message
+    logger.info(msg)  # Should be a connected message
 
     client.send_message({
         'message': 'query_begin',
         'transaction_id': 123,
 
-        'command': 'NVC_ASR_CMD', #'NDSP_ASR_APP_CMD',
+        'command': 'NVC_ASR_CMD',  # 'NDSP_ASR_APP_CMD',
         'language': language,
         # https://developer.nuance.com/public/Help/SpeechKitFrameworkReference_Android/com/nuance/speechkit/RecognitionType.html
         # Should be "DICTATION", "SEARCH" or "TV"
@@ -169,7 +170,6 @@ def do_recognize(loop, url, app_id, app_key, language, recorder, logger, use_spe
             more_audio = audiotask.result()
             rawaudio += more_audio
             audiotask = asyncio.ensure_future(recorder.dequeue())
-
 
     recorder.stop()
 

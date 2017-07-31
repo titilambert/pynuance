@@ -2,24 +2,6 @@ import json
 
 from pynuance.libs.error import PyNuanceError
 
-Accept = {
-    'mp3': {
-        'mimetype': 'audio/mpeg' # bit rate: 128kbps
-    },
-    'wav': {
-        'mimetype': 'audio/x-wav',
-        'codec': 'pcm',
-        'bit': 16,
-        'rate': [8000,16000,22000]
-    },
-    'speex': {
-        'mimetype': 'audio/x-speex',
-        'rate': [8000,16000]
-    },
-    'amr': {
-        'mimetype': 'audio/amr'
-    }
-}
 
 CODECS = ('wav', 'speex', 'opus')
 

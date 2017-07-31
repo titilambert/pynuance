@@ -17,20 +17,20 @@ def main():
     parser_cookies.add_argument('-u', '--username', help='Username')
     parser_cookies.add_argument('-p', '--password', help='Password')
     parser_cookies.add_argument('-C', '--cookies-file', required=True, help='Cookies file')
-    # Credentials
+    # *Credentials
     parser_cred = subparsers.add_parser("credentials", help="Get Nuance Credentials")
     parser_cred.add_argument('-u', '--username', help='Username')
     parser_cred.add_argument('-p', '--password', help='Password')
     parser_cred.add_argument('-c', '--credential-file', help='Credential file')
     parser_cred.add_argument('-C', '--cookies-file', help='Cookies file')
-    # TTS
+    # *TTS
     parser_tts = subparsers.add_parser("tts", help="Text To Speech")
     parser_tts.add_argument('-c', '--credentials', required=True, help='Credential file')
     parser_tts.add_argument('-l', '--language', required=True, help='Language')
     parser_tts.add_argument('-v', '--voice', required=True, help='Voice')
     parser_tts.add_argument('-d', '--codec', required=True, help='Codec')
     parser_tts.add_argument('-t', '--text', required=True, help='Text')
-    # STT
+    # *STT
     parser_stt = subparsers.add_parser("stt", help="Speech To Text")
     parser_stt.add_argument('-c', '--credentials', required=True, help='Credential file')
     parser_stt.add_argument('-l', '--language', required=True, help='Language')
@@ -38,64 +38,64 @@ def main():
                             help='Print all results')
     parser_stt.add_argument('-r', '--raw', default=False, action="store_true",
                             help='Print raw results in json format (imply --all)')
-    # NLU
+    # *NLU
     parser_nlu = subparsers.add_parser("nlu", help="NLU - Natural Language Understanding")
     nlu_subparsers = parser_nlu.add_subparsers(title="NLU Commands", help="NLU Commands",
                                                dest="nlucommand")
-    ## NLU Audio
+    # **NLU Audio
     parser_nlu_audio = nlu_subparsers.add_parser("audio", help="NLU audio using mic")
     parser_nlu_audio.add_argument('-c', '--credentials', required=True, help='Credential file')
     parser_nlu_audio.add_argument('-l', '--language', required=True, help='Language')
     parser_nlu_audio.add_argument('-T', '--context_tag', required=True, help='Context tag')
-    ## NLU Text
+    # **NLU Text
     parser_nlu_text = nlu_subparsers.add_parser("text", help="NLU text")
     parser_nlu_text.add_argument('-c', '--credentials', required=True, help='Credential file')
     parser_nlu_text.add_argument('-l', '--language', required=True, help='Language')
     parser_nlu_text.add_argument('-t', '--text', required=True, help='Text')
     parser_nlu_text.add_argument('-T', '--context_tag', required=True, help='Context tag')
-    # MIX
+    # *MIX
     parser_mix = subparsers.add_parser("mix", help="Nuance Mix Command")
     mix_subparsers = parser_mix.add_subparsers(title="subcommand", help="SubCommand",
                                                dest="mixcommand")
     parser_mix.add_argument('-u', '--username', help='Username')
     parser_mix.add_argument('-p', '--password', help='Password')
     parser_mix.add_argument('-C', '--cookies-file', help='Cookies file')
-    ## MIX Check
+    # **MIX Check
     parser_mix_check = mix_subparsers.add_parser("check", help=("Check if mix is activated "
                                                                 "for your account"))
-    ## MIX Models
+    # **MIX Models
     parser_mixm = mix_subparsers.add_parser("model", help="Manage Mix models")
     mixm_subparsers = parser_mixm.add_subparsers(title="Mix model command",
                                                  help="Mix Model Command",
                                                  dest="mix_model_command")
     parser_mixm.add_argument('-m', '--model-name', help='Model name or ID')
-    ## MIX Models list
+    # ***MIX Models list
     parser_mix_list = mixm_subparsers.add_parser("list", help=("Check if mix is activated "
                                                                "for your account"))
-    ## MIX Models create
+    # ***MIX Models create
     parser_mix_create = mixm_subparsers.add_parser("create", help=("Check if mix is activated "
                                                                    "for your account"))
     parser_mix_create.add_argument('-l', '--language', required=True, help='Language')
-    ## MIX Models delete
+    # ***MIX Models delete
     parser_mix_delete = mixm_subparsers.add_parser("delete", help=("Check if mix is activated "
                                                                    "for your account"))
-    ## MIX Models upload (file)
+    # ***MIX Models upload (file)
     parser_mix_upload = mixm_subparsers.add_parser("upload", help="Upload model file")
     parser_mix_upload.add_argument('-M', '--model-file', required=True, help='Model file')
-    ## MIX Models train
+    # ***MIX Models train
     parser_mix_train = mixm_subparsers.add_parser("train", help="Upload model file")
-    ## MIX Models build
+    # ****MIX Models build
     parser_mixm_build = mixm_subparsers.add_parser("build", help="Manage Mix model buils")
     mixm_build_subparsers = parser_mixm_build.add_subparsers(title="Mix Model build command",
                                                              help="Mix model build Command",
-                                                              dest="mix_model_build_command")
-    ## MIX Models Build list
+                                                             dest="mix_model_build_command")
+    # ****MIX Models Build list
     parser_mixm_build_list = mixm_build_subparsers.add_parser("list", help="Upload model file")
-    ## MIX Models Build create
+    # ****MIX Models Build create
     parser_mixm_build_create = mixm_build_subparsers.add_parser("create",
                                                                 help="Create a model build")
     parser_mixm_build_create.add_argument('-N', '--notes', default="", help='Version notes')
-    ## MIX Models Build attach
+    # ****MIX Models Build attach
     parser_mixm_build_attach = mixm_build_subparsers.add_parser("attach",
                                                                 help="Upload model file")
     parser_mixm_build_attach.add_argument('-b', '--build', default=None, help='Build')
@@ -104,8 +104,7 @@ def main():
     # Parse args
     args = parser.parse_args()
 
-
-
+    # Running commands
     if args.command == "cookies":
         # Run get credentials
         cli.save_cookies(args.cookies_file, args.username, args.password)
@@ -184,6 +183,6 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-   
+
 if __name__ == '__main__':
     sys.exit(main())
