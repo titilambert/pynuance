@@ -13,4 +13,4 @@ class TestUserHandling(object):
 
     def test_get_credentials(self):
         cli.get_credentials(None, None, self.cookies_file, self.credentials_file)
-        assert os.path.isfile("/tmp/test.json")
+        assert os.path.isfile(self.credentials_file)
