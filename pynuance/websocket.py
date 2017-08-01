@@ -6,6 +6,7 @@ import binascii
 import hashlib
 import json
 import os
+import datetime
 import urllib.parse
 
 import aiohttp
@@ -44,8 +45,8 @@ class AbstractWebsocketConnection(object):  # pylint: disable=R0801
         wsmsg = yield from self.stream.read()
         if wsmsg.tp == 1:
             return (self.MSG_JSON, json.loads(wsmsg.data))
-
-        return (self.MSG_AUDIO, wsmsg.data)
+        else:
+            return (self.MSG_AUDIO, wsmsg.data)
 
     def send_message(self, msg):
         """Send json message to the server"""
@@ -96,7 +97,7 @@ class AbstractWebsocketConnection(object):  # pylint: disable=R0801
         self.response = response
 
 
-class WebsocketConnection(AbstractWebsocketConnection):
+class BadWebsocketConnection(AbstractWebsocketConnection):
     """WebSocket connection object to handle Nuance server communications"""
 
     def __init__(self, url, logger):
@@ -121,3 +122,83 @@ class WebsocketConnection(AbstractWebsocketConnection):
             self._handle_response_101(response)
 
         self._handshake(response, sec_key)
+
+
+class WebsocketConnection(AbstractWebsocketConnection):
+    """Websocket client"""
+
+    def __init__(self, url, logger):
+        AbstractWebsocketConnection.__init__(self, url, logger)
+
+    @asyncio.coroutine
+    def connect(self, app_id, app_key, use_plaintext=True):
+        """Connect to the websocket"""
+        date = datetime.datetime.utcnow()
+        sec_key = base64.b64encode(os.urandom(16))
+
+        if use_plaintext:
+            params = {
+                'app_id': app_id,
+                'algorithm': 'key',
+                'app_key': binascii.hexlify(app_key),
+            }
+        else:
+            datestr = date.replace(microsecond=0).isoformat()
+            params = {
+                'date': datestr,
+                'app_id': app_id,
+                'algorithm': 'HMAC-SHA-256',
+                'signature': self.sign_credentials(datestr, app_key, app_id),
+            }
+
+        response = yield from aiohttp.request(
+            'get', self.url + '?' + urllib.parse.urlencode(params),
+            headers={
+                'UPGRADE': 'WebSocket',
+                'CONNECTION': 'Upgrade',
+                'SEC-WEBSOCKET-VERSION': '13',
+                'SEC-WEBSOCKET-KEY': sec_key.decode(),
+            })
+
+        if response.status == 401 and not use_plaintext:
+            if 'Date' in response.headers:
+                server_date = email.utils.parsedate_to_datetime(response.headers['Date'])
+                if server_date.tzinfo is not None:
+                    server_date = (server_date - server_date.utcoffset()).replace(tzinfo=None)
+            else:
+                server_date = yield from response.read()
+                server_date = datetime.datetime.strptime(server_date[:19].decode('ascii'),
+                                                         "%Y-%m-%dT%H:%M:%S")
+
+            # Use delta on future requests
+            date_delta = server_date - date
+
+            print("Retrying authorization (delta=%s)" % date_delta)
+
+            datestr = (date + date_delta).replace(microsecond=0).isoformat()
+            params = {
+                'date': datestr,
+                'algorithm': 'HMAC-SHA-256',
+                'app_id': app_id,
+                'signature': self.sign_credentials(datestr, app_key, app_id),
+            }
+
+            response = yield from aiohttp.request('get',
+                                                  self.url + '?' + urllib.parse.urlencode(params),
+                                                  headers={'UPGRADE': 'WebSocket',
+                                                           'CONNECTION': 'Upgrade',
+                                                           'SEC-WEBSOCKET-VERSION': '13',
+                                                           'SEC-WEBSOCKET-KEY': sec_key.decode(),
+                                                           })
+
+        if response.status != 101:
+            self._handle_response_101(response)
+
+        self._handshake(response, sec_key)
+
+    @staticmethod
+    def sign_credentials(datestr, app_key, app_id):
+        """Handle credentials"""
+        value = datestr.encode('ascii') + b' ' + app_id.encode('utf-8')
+        return hmac.new(app_key, value, hashlib.sha256).hexdigest()
+

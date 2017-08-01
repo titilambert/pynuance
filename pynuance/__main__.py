@@ -39,19 +39,16 @@ def main():  # pylint: disable=R0912,R0915
                             help='Print raw results in json format (imply --all)')
     # *NLU
     parser_nlu = subparsers.add_parser("nlu", help="NLU - Natural Language Understanding")
+    parser_nlu.add_argument('-c', '--credentials', required=True, help='Credential file')
+    parser_nlu.add_argument('-l', '--language', required=True, help='Language')
+    parser_nlu.add_argument('-T', '--context_tag', required=True, help='Context tag')
     nlu_subparsers = parser_nlu.add_subparsers(title="NLU Commands", help="NLU Commands",
                                                dest="nlucommand")
     # **NLU Audio
     parser_nlu_audio = nlu_subparsers.add_parser("audio", help="NLU audio using mic")
-    parser_nlu_audio.add_argument('-c', '--credentials', required=True, help='Credential file')
-    parser_nlu_audio.add_argument('-l', '--language', required=True, help='Language')
-    parser_nlu_audio.add_argument('-T', '--context_tag', required=True, help='Context tag')
     # **NLU Text
     parser_nlu_text = nlu_subparsers.add_parser("text", help="NLU text")
-    parser_nlu_text.add_argument('-c', '--credentials', required=True, help='Credential file')
-    parser_nlu_text.add_argument('-l', '--language', required=True, help='Language')
     parser_nlu_text.add_argument('-t', '--text', required=True, help='Text')
-    parser_nlu_text.add_argument('-T', '--context_tag', required=True, help='Context tag')
     # *MIX
     parser_mix = subparsers.add_parser("mix", help="Nuance Mix Command")
     mix_subparsers = parser_mix.add_subparsers(title="subcommand", help="SubCommand",
@@ -165,8 +162,12 @@ def main():  # pylint: disable=R0912,R0915
             context_tag = args.context_tag
         else:
             context_tag = creds[2]
-        # Run NLU TEXT command
-        cli.nlu_text(creds[0], creds[1], context_tag, args.language, args.text)
+        if args.nlucommand == "text":
+            # Run NLU TEXT command
+            cli.nlu_text(creds[0], creds[1], context_tag, args.language, args.text)
+        elif args.nlucommand == "audio":
+            # Run NLU TEXT command
+            cli.nlu_audio(creds[0], creds[1], context_tag, args.language)
 
     elif args.command == "tts":
         creds = parse_credentials(args.credentials)

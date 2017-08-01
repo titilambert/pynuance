@@ -151,6 +151,16 @@ def nlu_text(app_id, app_key, context_tag, language, text):
     print(json.dumps(result))
 
 
+def nlu_audio(app_id, app_key, context_tag, language):
+    """Try to understand audio from microphone and print the result."""
+    try:
+        result = nlu.understand_audio(app_id, app_key, context_tag, language)
+    except PyNuanceError as exp:
+        print("Error: {}".format(exp))
+        sys.exit(1)
+    print(json.dumps(result))
+
+
 def text_to_speech(app_id, app_key, lang, voice, codec, text):
     """Read a text with a given language, voice and code and print result."""
     try:

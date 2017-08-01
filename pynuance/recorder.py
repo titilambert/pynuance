@@ -2,7 +2,50 @@
 import asyncio
 import itertools
 
+import audioop
 import pyaudio
+
+# SILENT DETECTION
+# TODO adjust it
+FS_NB_CHUNK = 100
+NB_CHUNK = 5
+THRESHOLD = 500
+
+
+def silent_detection(audio, silent_list, first_silent_done, logger):
+    """Analyse audio chunk to determine if this is a silent
+
+    return False: the user did NOT speak
+    return None: the user is speaking or we are waiting for it
+    return True: the user had finished to speack
+    """
+    # Get rms for this chunk
+    audio_rms = audioop.rms(audio, 2)
+    # Detect first silent
+    if first_silent_done is False:
+        logger.debug("Audio level: %s", audio_rms)
+        if audio_rms < THRESHOLD:
+            logger.debug("Waiting for user speaking")
+            silent_list.append(True)
+        else:
+            logger.debug("User is maybe starting to speak")
+            silent_list.append(False)
+        if len([s for s in silent_list if s is False]) > 5:
+            logger.debug("User is starting to speak")
+            silent_list = []
+            first_silent_done = True
+        if len(silent_list) > FS_NB_CHUNK:
+            logger.debug("The user did NOT speak")
+            return False, silent_list, first_silent_done
+    else:
+        silent_list.append(True if audio_rms < THRESHOLD else False)
+        if len(silent_list) > NB_CHUNK:
+            logger.debug("The user is speaking. Level: %d", audio_rms)
+            silent_list.pop(0)
+        if len(silent_list) == NB_CHUNK and all(silent_list):
+            logger.debug("The user has finished to speak")
+            return True, silent_list, first_silent_done
+    return None, silent_list, first_silent_done
 
 
 class Recorder:
