@@ -4,19 +4,16 @@ import asyncio
 import binascii
 
 import aiohttp
-try:
-    import speex
-except ImportError:
-    speex = None
 
 from pynuance.logger import LOGGER_ROOT
-from pynuance.websocket import WebsocketConnection
+from pynuance.websocket import WebsocketConnection, connection_handshake
 from pynuance.libs.languages import NLU_LANGUAGES
 from pynuance.libs.error import PyNuanceError
-from pynuance.recorder import Recorder, silent_detection
+from pynuance.recorder import Recorder, listen_microphone
 
 
 _LOGGER_NLU = LOGGER_ROOT.getChild("nlu")
+
 
 def understand_audio(app_id, app_key, context_tag, language):
     """NLU audio wrapper"""
@@ -29,7 +26,7 @@ def understand_audio(app_id, app_key, context_tag, language):
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
-        logger.debug("Get New event loop")
+        _LOGGER_NLU.debug("Get New event loop")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -48,37 +45,20 @@ def understand_audio(app_id, app_key, context_tag, language):
     if interpretations is False:
         # The user did not speak
         return {}
-    else:
-        return interpretations
 
+    return interpretations
 
 
 @asyncio.coroutine
 def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
                language, recorder, logger):
     """Trying to understand audio"""
-    audio = b''
-    rawaudio = b''
-
-    # Prepare audio
-    rate = recorder.rate
-    resampler = None
-
-    if rate >= 16000:
-        if rate != 16000:
-            resampler = speex.SpeexResampler(1, rate, 16000)  # pylint: disable=E1101
-    else:
-        if rate != 8000:
-            resampler = speex.SpeexResampler(1, rate, 8000)  # pylint: disable=E1101
-
-    audio_type = 'audio/x-speex;mode=wb'
-    encoder = speex.WBEncoder()  # pylint: disable=E1101
-
     # Websocket client
     client = WebsocketConnection(url, logger)
     yield from client.connect(app_id, app_key)
 
     # Init Nuance communication
+    audio_type = 'audio/x-speex;mode=wb'
     client.send_message({
         'message': 'connect',
         'device_id': '55555500000000000000000000000000',
@@ -86,6 +66,7 @@ def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
     })
 
     _, msg = yield from client.receive()
+
     # logger.debug(msg)  # Should be a connected message
 
     client.send_message({
@@ -97,83 +78,12 @@ def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
         'context_tag': context_tag,
     })
 
-    client.send_message({
-        'message': 'query_parameter',
-        'transaction_id': 123,
+    connection_handshake(client)
 
-        'parameter_name': 'AUDIO_INFO',
-        'parameter_type': 'audio',
-
-        'audio_id': 456
-    })
-
-    client.send_message({
-        'message': 'query_end',
-        'transaction_id': 123,
-    })
-
-    client.send_message({
-        'message': 'audio',
-        'audio_id': 456,
-    })
-
-    audiotask = asyncio.ensure_future(recorder.dequeue())
     receivetask = asyncio.ensure_future(client.receive())
+    audiotask = asyncio.ensure_future(recorder.dequeue())
 
-    # Prepare silent vars
-    silent_list = []
-    first_silent_done = False
-    while True:
-        while len(rawaudio) > 320*recorder.channels*2:
-            count = len(rawaudio)
-            if count > 320*4*recorder.channels*2:
-                count = 320*4*recorder.channels*2
-
-            procsamples = b''
-            if recorder.channels > 1:
-                for i in range(0, count, 2*recorder.channels):
-                    procsamples += rawaudio[i:i+1]
-            else:
-                procsamples = rawaudio[:count]
-
-            rawaudio = rawaudio[count:]
-
-            if resampler:
-                audio += resampler.process(procsamples)
-            else:
-                audio += procsamples
-
-        while len(audio) > encoder.frame_size*2:
-            coded = encoder.encode(audio[:encoder.frame_size*2])
-            client.send_audio(coded)
-            audio = audio[encoder.frame_size*2:]
-
-        yield from asyncio.wait((audiotask, receivetask),
-                                return_when=asyncio.FIRST_COMPLETED,
-                                loop=loop)
-
-        # SILENT DETECTION
-        ret, silent_list, first_silent_done = silent_detection(audio, silent_list,
-                                                               first_silent_done, logger)
-        if ret is False:
-            return ret
-        if ret is True:
-            break
-
-        if audiotask.done():
-            more_audio = audiotask.result()
-            rawaudio += more_audio
-            audiotask = asyncio.ensure_future(recorder.dequeue())
-
-        if receivetask.done():
-            _, msg = receivetask.result()
-            logger.debug(msg)
-
-            if msg['message'] == 'query_end':
-                client.close()
-                return
-
-            receivetask = asyncio.ensure_future(client.receive())
+    yield from listen_microphone(loop, client, recorder, audiotask, receivetask, logger)
 
     recorder.stop()
 
@@ -198,7 +108,6 @@ def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
 
     client.close()
     return interpretation
-
 
 
 def understand_text(app_id, app_key, context_tag, language, text):

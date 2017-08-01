@@ -45,7 +45,7 @@ def main():  # pylint: disable=R0912,R0915
     nlu_subparsers = parser_nlu.add_subparsers(title="NLU Commands", help="NLU Commands",
                                                dest="nlucommand")
     # **NLU Audio
-    parser_nlu_audio = nlu_subparsers.add_parser("audio", help="NLU audio using mic")
+    nlu_subparsers.add_parser("audio", help="NLU audio using mic")
     # **NLU Text
     parser_nlu_text = nlu_subparsers.add_parser("text", help="NLU text")
     parser_nlu_text.add_argument('-t', '--text', required=True, help='Text')

@@ -4,12 +4,98 @@ import itertools
 
 import audioop
 import pyaudio
+try:
+    import speex
+except ImportError:
+    speex = None
 
 # SILENT DETECTION
 # TODO adjust it
 FS_NB_CHUNK = 100
 NB_CHUNK = 5
 THRESHOLD = 500
+
+
+@asyncio.coroutine
+def listen_microphone(loop, client, recorder, audiotask, receivetask=None, logger=None):
+    """Listen microphone and send audio to Nuance"""
+    # Prepare silent vars
+    audio = b''
+    rawaudio = b''
+
+    encoder = speex.WBEncoder()  # pylint: disable=E1101
+
+    # Prepare audio
+    rate = recorder.rate
+    resampler = None
+
+    if rate >= 16000:
+        if rate != 16000:
+            resampler = speex.SpeexResampler(1, rate, 16000)  # pylint: disable=E1101
+    else:
+        if rate != 8000:
+            resampler = speex.SpeexResampler(1, rate, 8000)  # pylint: disable=E1101
+
+    silent_list = []
+    first_silent_done = False
+    while True:
+        while len(rawaudio) > 320*recorder.channels*2:
+            count = len(rawaudio)
+            if count > 320*4*recorder.channels*2:
+                count = 320*4*recorder.channels*2
+
+            procsamples = b''
+            if recorder.channels > 1:
+                for i in range(0, count, 2*recorder.channels):
+                    procsamples += rawaudio[i:i+1]
+            else:
+                procsamples = rawaudio[:count]
+
+            rawaudio = rawaudio[count:]
+
+            if resampler:
+                audio += resampler.process(procsamples)
+            else:
+                audio += procsamples
+
+        while len(audio) > encoder.frame_size*2:
+            coded = encoder.encode(audio[:encoder.frame_size*2])
+            client.send_audio(coded)
+            audio = audio[encoder.frame_size*2:]
+
+        if receivetask is not None:
+            yield from asyncio.wait((audiotask, receivetask),
+                                    return_when=asyncio.FIRST_COMPLETED,
+                                    loop=loop)
+        else:
+            yield from asyncio.wait((audiotask,),
+                                    return_when=asyncio.FIRST_COMPLETED,
+                                    loop=loop)
+
+        # SILENT DETECTION
+        ret, silent_list, first_silent_done = silent_detection(audio, silent_list,
+                                                               first_silent_done, logger)
+        if ret is False:
+            # TODO document this
+            return ret
+        if ret is True:
+            # TODO document this
+            break
+
+        if audiotask.done():
+            more_audio = audiotask.result()
+            rawaudio += more_audio
+            audiotask = asyncio.ensure_future(recorder.dequeue())
+
+        if receivetask is not None and receivetask.done():
+            _, msg = receivetask.result()
+            logger.debug(msg)
+
+            if msg['message'] == 'query_end':
+                client.close()
+                return
+
+            receivetask = asyncio.ensure_future(client.receive())
 
 
 def silent_detection(audio, silent_list, first_silent_done, logger):

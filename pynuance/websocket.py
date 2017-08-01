@@ -3,7 +3,9 @@
 import asyncio
 import base64
 import binascii
+import email
 import hashlib
+import hmac
 import json
 import os
 import datetime
@@ -19,6 +21,32 @@ except ImportError:
 # This is a fixed string (constant), used in the Websockets protocol handshake
 # in order to establish a conversation
 WS_KEY = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+
+
+def connection_handshake(client):
+    """Nuance connection handshake.
+
+    Use for STT and NLU audio.
+    """
+    client.send_message({
+        'message': 'query_parameter',
+        'transaction_id': 123,
+
+        'parameter_name': 'AUDIO_INFO',
+        'parameter_type': 'audio',
+
+        'audio_id': 456
+    })
+
+    client.send_message({
+        'message': 'query_end',
+        'transaction_id': 123,
+    })
+
+    client.send_message({
+        'message': 'audio',
+        'audio_id': 456,
+    })
 
 
 class AbstractWebsocketConnection(object):  # pylint: disable=R0801
@@ -45,8 +73,8 @@ class AbstractWebsocketConnection(object):  # pylint: disable=R0801
         wsmsg = yield from self.stream.read()
         if wsmsg.tp == 1:
             return (self.MSG_JSON, json.loads(wsmsg.data))
-        else:
-            return (self.MSG_AUDIO, wsmsg.data)
+
+        return (self.MSG_AUDIO, wsmsg.data)
 
     def send_message(self, msg):
         """Send json message to the server"""
@@ -201,4 +229,3 @@ class WebsocketConnection(AbstractWebsocketConnection):
         """Handle credentials"""
         value = datestr.encode('ascii') + b' ' + app_id.encode('utf-8')
         return hmac.new(app_key, value, hashlib.sha256).hexdigest()
-
