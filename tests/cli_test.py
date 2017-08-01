@@ -17,6 +17,7 @@ class TestUserHandling(object):
         self.model_name = "ci-model"
         self.model_file = "tests/upload.trsx"
         self.context_tag = "ci-tag"
+        self.mix_ready = False
 
     @pytest.mark.order1
     def test_get_credentials(self):
@@ -40,11 +41,20 @@ class TestUserHandling(object):
         # Run it
         main()
         out, err = capsys.readouterr()
-        # Check it
-        assert out == "Your Mix account is activated, you can use NLU\n"
+        if out == "Your Mix account is activated, you can use NLU\n":
+            # Mix ready
+            assert True
+            self.mix_ready = True
+        else:
+            # Mix not ready
+            assert out == "Your Mix account is being created or is not requested\n"
+            self.mix_ready = False
 
     @pytest.mark.order3
     def test_mix_model_create(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # Prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -59,6 +69,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order4
     def test_mix_model_list(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # Prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -73,6 +86,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order5
     def test_mix_model_upload(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -88,6 +104,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order6
     def test_mix_model_train(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -103,6 +122,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order7
     def test_mix_model_build_create(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -117,6 +139,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order8
     def test_mix_model_build_list(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -131,6 +156,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order9
     def test_mix_model_build_attach(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
@@ -146,6 +174,9 @@ class TestUserHandling(object):
 
     @pytest.mark.order10
     def test_mix_model_delete(self, capsys):
+        # Test Mix account
+        if not self.mix_ready:
+            pytest.skip("Mix account not ready")
         # Prepare command
         sys.argv = ["pynuance", 'mix',
                     '-C', self.cookies_file,
