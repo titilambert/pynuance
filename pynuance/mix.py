@@ -227,6 +227,7 @@ def model_build_attach(name, build_version=None, context_tag="latest",
 
     For now, only SandBoxApp is supported by pynuance
     """
+    # TODO validate context_tag
     headers = {"Content-Type": "application/json;charset=UTF-8"}
     # Get model ID
     model = get_model(name, username, password, cookies_file)

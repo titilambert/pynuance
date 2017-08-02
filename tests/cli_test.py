@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 import pytest
 
@@ -18,7 +19,7 @@ class TestUserHandling(object):
         self.credentials_file = os.environ.get("PYNUANCE_CREDENTIALS")
         self.model_name = "ci-model"
         self.model_file = "tests/upload.trsx"
-        self.context_tag = "ci-tag"
+        self.context_tag = "ci_tag"
 
     @pytest.mark.order1
     def test_get_credentials(self):
@@ -83,7 +84,6 @@ class TestUserHandling(object):
         main()
         out, err = capsys.readouterr()
         # Check it
-        #ssert out.startswith("""Model "{}" created with ID: """.format(self.model_name))
         assert out.find(" | {}".format(self.model_name)) != -1
 
     @pytest.mark.order5
@@ -121,6 +121,8 @@ class TestUserHandling(object):
         # check it 
         assert out == ('''Training: {}\nModel "{}" trained\n'''.format(self.model_name,
                                                                        self.model_name))
+        # Wait for 5 sec for model training
+        time.sleep(5)
 
     @pytest.mark.order7
     def test_mix_model_build_create(self, capsys):
@@ -138,6 +140,8 @@ class TestUserHandling(object):
         out, err = capsys.readouterr()
         # check it 
         assert out == ('New build created for model "{}"\n'.format(self.model_name))
+        # Wait for 5 sec for model build creation
+        time.sleep(5)
 
     @pytest.mark.order8
     def test_mix_model_build_list(self, capsys):
@@ -154,7 +158,7 @@ class TestUserHandling(object):
         main()
         out, err = capsys.readouterr()
         # check it 
-        assert out.find("1 | STARTED") != -1
+        assert out.find(" 1 | ") != -1
 
     @pytest.mark.order9
     def test_mix_model_build_attach(self, capsys):
@@ -173,8 +177,29 @@ class TestUserHandling(object):
         # check it 
         assert out == ('The latest build of model "{}" is now attached to the "SandBox" App '
                        'with context tag "{}"\n'.format(self.model_name, self.context_tag))
+        # Wait for 5 sec for model build attachment
+        time.sleep(5)
 
     @pytest.mark.order10
+    def test_mix_nlu_text(self, capsys):
+        # Test Mix account
+        if not MIX_READY:
+            pytest.skip("Mix account not ready")
+        # Prepare command
+        sys.argv = ["pynuance", 'nlu',
+                    '-c', self.credentials_file,
+                    '-l', 'en_US',
+                    '-T', self.context_tag,
+                    'text',
+                    '-t', "What time is it ?",
+                    ]
+         # Run it
+        main()
+        out, err = capsys.readouterr()
+        # Check it
+        assert out.find("get_time") != -1
+
+    @pytest.mark.order11
     def test_mix_model_delete(self, capsys):
         # Test Mix account
         if not MIX_READY:
