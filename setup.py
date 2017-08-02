@@ -12,7 +12,7 @@ setup(name='pynuance',
       description='Python wrapper for Nuance Communications services',
       author='Thibault Cohen',
       author_email='titilambert@gmail.com',
-      url='http://github.org/titilambert/pynuance',
+      url='https://github.org/titilambert/pynuance',
       packages=packages,
       entry_points={
           'console_scripts': [
