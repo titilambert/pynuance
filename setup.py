@@ -9,7 +9,6 @@ test_reqs = parse_requirements('test_requirements.txt', session=session)
 packages = ['pynuance',
             'pynuance.libs',
             ]
-            
 
 setup(name='pynuance',
       version='0.1.0',
@@ -30,7 +29,8 @@ setup(name='pynuance',
       include_package_data=True,
       license='Apache 2.0',
       classifiers=(
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
       )
-
 )
