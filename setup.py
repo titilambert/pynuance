@@ -1,10 +1,7 @@
-from pip.req import parse_requirements
 from setuptools import setup
 from pip.download import PipSession
 
 session = PipSession()
-install_reqs = parse_requirements('requirements.txt', session=session)
-test_reqs = parse_requirements('test_requirements.txt', session=session)
 
 packages = ['pynuance',
             'pynuance.libs',
@@ -22,7 +19,7 @@ setup(name='pynuance',
               'pynuance = pynuance.__main__:main'
           ]
       },
-      package_data={'': ['LICENSE.txt', 'requirements.txt', 'test_requirements.txt']},
+      package_data={'': ['LICENSE.txt']},
       package_dir={'pynuance': 'pynuance'},
       install_requires=["aiohttp==0.16.2",
                         "asyncio==3.4.3",
