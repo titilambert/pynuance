@@ -180,7 +180,7 @@ def speech_to_text(app_id, app_key, language, all_=False, raw=False):
         sys.exit(1)
     if raw:
         print(json.dumps(result))
-    elif not result:
+    elif not result or not result[0].get("transcriptions"):
         print("No result from Nuance. Check your microphone volume")
     else:
         if all_:
