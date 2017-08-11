@@ -96,7 +96,11 @@ def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
     interpretation = {}
     while True:
         yield from asyncio.wait((receivetask,), loop=loop)
-        _, msg = receivetask.result()
+        try:
+            _, msg = receivetask.result()
+        except aiohttp.errors.ServerDisconnectedError:
+            raise PyNuanceError("Error, check your context tag {} existence "
+                                "in MIX".format(context_tag))
         logger.debug(msg)
 
         if msg['message'] == 'query_end':

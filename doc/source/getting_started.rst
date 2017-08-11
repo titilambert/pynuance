@@ -51,7 +51,7 @@ Text To Speech
 
 ::
 
-    pynuance tts -c credentials.json -l en_US -v Allison -C speex -t "Hello World"
+    pynuance tts -c credentials.json -l en_US -v Allison -d speex -t "Hello World"
 
 
 
@@ -119,7 +119,7 @@ If you got `Your Mix account is activated, you can use NLU`, you can use it !
 
 ::
 
-    pynuance nlu text -c credentials.json -l en_US -T mytag -t "What time is it ?"
+    pynuance nlu -c credentials.json -l en_US -T mytag text -t "What time is it ?"
 
 
 .. note:: For next NLU commands, only step 8 is required
