@@ -8,7 +8,7 @@ packages = ['pynuance',
             ]
 
 setup(name='pynuance',
-      version='0.1.3',
+      version='0.1.4',
       description='Python wrapper for Nuance Communications services',
       author='Thibault Cohen',
       author_email='titilambert@gmail.com',
