@@ -1,13 +1,10 @@
 """Provides Speech-To-Text functions"""
 import asyncio
 import binascii
+import logging
 
-from pynuance.logger import LOGGER_ROOT
 from pynuance.websocket import WebsocketConnection, connection_handshake
 from pynuance.recorder import Recorder, listen_microphone
-
-
-_LOGGER_STT = LOGGER_ROOT.getChild("stt")
 
 
 @asyncio.coroutine
@@ -15,7 +12,7 @@ def do_recognize(loop, url, app_id, app_key, language,  # pylint: disable=R0914,
                  recorder, logger):
     """Main function for Speech-To-Text"""
     # Websocket client
-    client = WebsocketConnection(url, _LOGGER_STT)
+    client = WebsocketConnection(url, logger)
     yield from client.connect(app_id, app_key)
 
     # Init Nuance communication
@@ -67,11 +64,13 @@ def do_recognize(loop, url, app_id, app_key, language,  # pylint: disable=R0914,
     return msg_list
 
 
-def speech_to_text(app_id, app_key, language):
+def speech_to_text(app_id, app_key, language, logger=None):
     """Speech to text from mic and return result.
 
     This function auto detect a silence
     """
+    if logger is None:
+        logger = logging.getLogger("pynuance").getChild("stt")
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -87,7 +86,7 @@ def speech_to_text(app_id, app_key, language):
             binascii.unhexlify(app_key),
             language,
             recorder=recorder,
-            logger=_LOGGER_STT,
+            logger=logger,
             ))
         loop.stop()
     return output

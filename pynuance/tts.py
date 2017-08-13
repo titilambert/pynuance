@@ -1,6 +1,7 @@
 """Provides Text-To-Speech functions"""
 import asyncio
 import binascii
+import logging
 
 import pyaudio
 try:
@@ -14,7 +15,6 @@ except ImportError:
     opus = None
 
 from pynuance.websocket import WebsocketConnection
-from pynuance.logger import LOGGER_ROOT
 from pynuance.libs.languages import LANGUAGES
 from pynuance.libs.error import PyNuanceError
 
@@ -46,8 +46,6 @@ VOICES = {"eng-USA": {"female": "ava",
           "fra-FRA": {"female": "aurelie",
                       "male": "thomas"},
           }
-
-_LOGGER_TTS = LOGGER_ROOT.getChild("tts")
 
 
 def _get_opus_decoder_func(decoder):
@@ -164,8 +162,10 @@ def do_synthesis(url, app_id, app_key, language, voice, codec,
     audio_player.terminate()
 
 
-def text_to_speech(app_id, app_key, language, voice, codec, text):
+def text_to_speech(app_id, app_key, language, voice, codec, text, logger=None):
     """Read a text with a given language, voice and code"""
+    if logger is None:
+        logger = logging.getLogger("pynuance").getChild("tts")
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
     if language not in voices_by_lang:
         raise PyNuanceError("Language should be in "
@@ -177,5 +177,5 @@ def text_to_speech(app_id, app_key, language, voice, codec, text):
     _loop = asyncio.get_event_loop()
     _loop.run_until_complete(do_synthesis("https://ws.dev.nuance.com/v1/",
                              app_id, binascii.unhexlify(app_key), language, voice, codec,
-                             text, logger=_LOGGER_TTS))
+                             text, logger=logger))
     _loop.stop()

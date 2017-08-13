@@ -2,22 +2,21 @@
 
 import asyncio
 import binascii
+import logging
 
 import aiohttp
 
-from pynuance.logger import LOGGER_ROOT
 from pynuance.websocket import WebsocketConnection, connection_handshake
 from pynuance.libs.languages import NLU_LANGUAGES
 from pynuance.libs.error import PyNuanceError
 from pynuance.recorder import Recorder, listen_microphone
 
 
-_LOGGER_NLU = LOGGER_ROOT.getChild("nlu")
-
-
-def understand_audio(app_id, app_key, context_tag, language):
+def understand_audio(app_id, app_key, context_tag, language, logger=None):
     """NLU audio wrapper"""
     # transform language
+    if logger is None:
+        logger = logging.getLogger("pynuance").getChild("nlu").getChild("audio")
     nlu_language = NLU_LANGUAGES.get(language)
     if nlu_language is None:
         raise PyNuanceError("Language should be in "
@@ -26,7 +25,7 @@ def understand_audio(app_id, app_key, context_tag, language):
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
-        _LOGGER_NLU.debug("Get New event loop")
+        logger.debug("Get New event loop")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -40,7 +39,7 @@ def understand_audio(app_id, app_key, context_tag, language):
             context_tag,
             nlu_language,
             recorder=recorder,
-            logger=_LOGGER_NLU,))
+            logger=logger,))
     # loop.close()
     if interpretations is False:
         # The user did not speak
@@ -114,19 +113,21 @@ def _nlu_audio(loop, url, app_id, app_key, context_tag,  # pylint: disable=R0914
     return interpretation
 
 
-def understand_text(app_id, app_key, context_tag, language, text):
+def understand_text(app_id, app_key, context_tag, language, text, logger=None):
     """Nlu text wrapper"""
+    if logger is None:
+        logger = logging.getLogger("pynuance").getChild("nlu").getChild("text")
     # transform language
     nlu_language = NLU_LANGUAGES.get(language)
     if nlu_language is None:
         raise PyNuanceError("Language should be in "
                             "{}".format(", ".join(NLU_LANGUAGES.keys())))
 
-    _LOGGER_NLU.debug("Text received: {}".format(text))
+    logger.debug("Text received: {}".format(text))
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
-        _LOGGER_NLU.debug("Get New event loop")
+        logger.debug("Get New event loop")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -138,7 +139,7 @@ def understand_text(app_id, app_key, context_tag, language, text):
                   context_tag,
                   text,
                   nlu_language,
-                  _LOGGER_NLU,
+                  logger,
                   ))
     # loop.close()
     if interpretations is False:
