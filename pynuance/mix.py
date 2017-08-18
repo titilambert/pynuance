@@ -43,6 +43,8 @@ def list_models(username=None, password=None, cookies_file=None):  # pylint: dis
     """Get list of models/project from Nuance Mix."""
     result = requests.get("https://developer.nuance.com/mix/nlu/api/v1/projects",
                           cookies=cookies)  # pylint: disable=E0602
+    if result.status_code != 200:
+        return None
     return result.json().get("data", [])
 
 
