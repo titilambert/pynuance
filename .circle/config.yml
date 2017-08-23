@@ -1,0 +1,47 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          - v1-dependencies-{{ checksum "test_requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+          name: install dependencies
+          command: |
+            sudo apt-get install libsamplerate0-dev portaudio19-dev libspeexdsp-dev
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install numpy
+            pip install -r requirements.txt --upgrade
+            pip install -r test_requirements.txt --upgrade
+            pip install codeclimate-test-reporter
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python setup.py develop
+            pynuance cookies -u $PYNUANCE_USERNAME -p $PYNUANCE_PASSWORD -C `pwd`/cookies.json
+            pycodestyle --max-line-length=100 pynuance
+            pylint --rcfile=.pylintrc -r no pynuance
+            PYNUANCE_COOKIES=`pwd`/cookies.json PYNUANCE_CREDENTIALS=`pwd`/credentials.json pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=pynuance/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests/ 
+            coverage combine || true
+            coverage report --include='*/pynuance/*'
+            CODECLIMATE_REPO_TOKEN=${CODECLIMATE_REPO_TOKEN} codeclimate-test-reporter
+      - store_artifacts:
+          path: pytest/
+          destination: test_results/
+      # Useless for now waiting for update from circleCI UI
+      - store_test_results:
+          path: pytest/

@@ -14,7 +14,7 @@ try:
 except ImportError:
     opus = None
 
-from pynuance.websocket import WebsocketConnection
+from pynuance.websocket import NCSWebSocketClient
 from pynuance.libs.languages import LANGUAGES
 from pynuance.libs.error import PyNuanceError
 
@@ -41,12 +41,6 @@ COMMANDS = [
     'NDSP_DELETE_ALL_DATA_CMD',
 ]
 
-VOICES = {"eng-USA": {"female": "ava",
-                      "male": "tom"},
-          "fra-FRA": {"female": "aurelie",
-                      "male": "thomas"},
-          }
-
 
 def _get_opus_decoder_func(decoder):
     """Create function for Opus codec"""
@@ -57,7 +51,35 @@ def _get_opus_decoder_func(decoder):
     return decoder_func
 
 
-def do_synthesis(url, app_id, app_key, language, voice, codec,
+def text_to_speech(app_id, app_key, language, voice, codec, text, logger=None):
+    """Read a text with a given language, voice and code"""
+    if logger is None:
+        logger = logging.getLogger("pynuance").getChild("tts")
+    voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
+    if language not in voices_by_lang:
+        raise PyNuanceError("Language should be in "
+                            "{}".format(", ".join(voices_by_lang.keys())))
+    if voice not in voices_by_lang[language]:
+        raise PyNuanceError("Voice should be in "
+                            "{}".format(', '.join(voices_by_lang[language])))
+
+    # Prepare ncs client
+    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        logger.debug("Get New event loop")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(do_synthesis(ncs_client, language, voice, codec,
+                                         text, logger=logger))
+    loop.stop()
+
+
+@asyncio.coroutine
+def do_synthesis(ncs_client, language, voice, codec,
                  input_text, logger):
     """The TTS function using Nuance Communications services"""
     audio_player = pyaudio.PyAudio()
@@ -75,47 +97,6 @@ def do_synthesis(url, app_id, app_key, language, voice, codec,
         audio_type = 'audio/opus;rate=16000'
     else:
         audio_type = 'audio/L16;rate=16000'
-
-    client = WebsocketConnection(url, logger)
-    yield from client.connect(app_id, app_key)
-
-    client.send_message({
-        'message': 'connect',
-        'codec': audio_type,
-        'device_id': 'f0350aa9d98047a4b63d72ca5bfdf509',
-        'user_id': '35228eb1afb54a3f8ba83754445a197c'
-    })
-
-    _, msg = yield from client.receive()
-    # Should be a connected message
-    logger.debug(msg)
-
-    # synthesize
-    client.send_message({
-        'message': 'query_begin',
-        'transaction_id': 123,
-        'command': 'NVC_TTS_CMD',
-        'language': language,
-        'tts_voice': voice,
-    })
-
-    client.send_message({
-        'message': 'query_parameter',
-        'transaction_id': 123,
-
-        'parameter_name': 'TEXT_TO_READ',
-        'parameter_type': 'dictionary',
-        'dictionary': {
-            'audio_id': 789,
-            'tts_input': input_text,
-            'tts_type': 'text'
-        }
-    })
-
-    client.send_message({
-        'message': 'query_end',
-        'transaction_id': 123,
-    })
 
     # Create stream player
     stream = audio_player.open(format=audio_player.get_format_from_width(2),
@@ -141,41 +122,40 @@ def do_synthesis(url, app_id, app_key, language, voice, codec,
         print('ERROR: Need to implement encoding for %s!' % audio_type)
         return
 
-    # Read and play sound
-    while True:
-        msg_type, msg = yield from client.receive()
-        if msg_type == client.MSG_JSON:
-            logger.debug(msg)
-            if msg['message'] == 'query_end':
-                break
-        else:
-            if decoder_func is not None:
-                msg = decoder_func(msg)
-            logger.info("Start sentence")
-            stream.write(msg)
-            logger.info("End sentence")
+    try:
+        yield from ncs_client.connect()
+        DEVICE_ID = 'MIX_WS_PYTHON_SAMPLE_APP'
+        user_id = "35228eb1afb54a3f8ba83754445a197c"
+        session = yield from ncs_client.init_session(user_id, DEVICE_ID, codec=audio_type)
+        transaction = yield from session.begin_transaction(command='NVC_TTS_CMD',
+                                                           language=language,
+                                                           tts_voice=voice,
+                                                           )
+        request_info = {'dictionary': {'audio_id': 789,
+                                       'tts_input': input_text,
+                                       'tts_type': 'text'
+                                       }
+                        }
+        yield from transaction.send_parameter(name='TEXT_TO_READ', type_='dictionary',
+                                              value=request_info)
+        message = yield from transaction.end(wait=False)
 
-    # Close stream and client
-    client.close()
-    stream.stop_stream()
-    stream.close()
-    audio_player.terminate()
-
-
-def text_to_speech(app_id, app_key, language, voice, codec, text, logger=None):
-    """Read a text with a given language, voice and code"""
-    if logger is None:
-        logger = logging.getLogger("pynuance").getChild("tts")
-    voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
-    if language not in voices_by_lang:
-        raise PyNuanceError("Language should be in "
-                            "{}".format(", ".join(voices_by_lang.keys())))
-    if voice not in voices_by_lang[language]:
-        raise PyNuanceError("Voice should be in "
-                            "{}".format(', '.join(voices_by_lang[language])))
-
-    _loop = asyncio.get_event_loop()
-    _loop.run_until_complete(do_synthesis("https://ws.dev.nuance.com/v1/",
-                             app_id, binascii.unhexlify(app_key), language, voice, codec,
-                             text, logger=logger))
-    _loop.stop()
+        # Get answer message 1
+        message = yield from ncs_client.receive_json()
+        # Get answer message 2
+        message = yield from ncs_client.receive_json()
+        # Read and play sound
+        sound = yield from ncs_client.receive_bytes()
+        if decoder_func is not None:
+            sound = decoder_func(sound)
+        logger.info("Start sentence")
+        stream.write(sound)
+        logger.info("End sentence")
+        # Get answer message 3
+        message = yield from ncs_client.receive_json()
+    finally:
+        # Close stream and client
+        stream.stop_stream()
+        stream.close()
+        audio_player.terminate()
+        yield from ncs_client.close()

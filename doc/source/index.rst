@@ -10,12 +10,11 @@ Welcome to PyNuance's documentation!
     :maxdepth: 2
     :caption: Contents:
 
-    intro
     install
     getting_started
     develop
     references
-    pynuance/modules
+    refs/modules
 
 Indices and tables
 ==================

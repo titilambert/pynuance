@@ -10,6 +10,8 @@ from pynuance import tts
 from pynuance import stt
 from pynuance.libs.error import PyNuanceError
 
+URL = "https://ws.dev.nuance.com/ws/v1/"
+
 
 def save_cookies(cookies_file, username=None, password=None):
     """CLI function to save cookie on the disk."""
@@ -144,7 +146,8 @@ def model_build_attach(name, build_version=None, context_tag="latest",
 def nlu_text(app_id, app_key, context_tag, language, text):
     """Try to understand a text and print the result."""
     try:
-        result = nlu.understand_text(app_id, app_key, context_tag, language, text)
+        # TODO add support for user speaking
+        result = nlu.understand_text(app_id, app_key, "user1", context_tag, text, language)
     except PyNuanceError as exp:
         print("Error: {}".format(exp))
         sys.exit(1)
@@ -180,11 +183,11 @@ def speech_to_text(app_id, app_key, language, all_=False, raw=False):
         sys.exit(1)
     if raw:
         print(json.dumps(result))
-    elif not result or not result[0].get("transcriptions"):
+    elif not result or not result.get("transcriptions"):
         print("No result from Nuance. Check your microphone volume")
     else:
         if all_:
-            for transcription in result[0].get("transcriptions"):
+            for transcription in result.get("transcriptions"):
                 print(transcription)
         else:
-            print(result[0].get("transcriptions")[0])
+            print(result.get("transcriptions")[0])

@@ -3,74 +3,69 @@ import asyncio
 import binascii
 import logging
 
-from pynuance.websocket import WebsocketConnection, connection_handshake
+from pynuance.websocket import NCSWebSocketClient
+from pynuance.ncstransaction import NCSAudioTransfer
 from pynuance.recorder import Recorder, listen_microphone
 
 
 @asyncio.coroutine
-def do_recognize(loop, url, app_id, app_key, language,  # pylint: disable=R0914,R0914
-                 recorder, logger):
+def do_recognize(loop, ncs_client, language,  # pylint: disable=R0914,R0914
+                 recorder, user_id="", device_id=""):
     """Main function for Speech-To-Text"""
-    # Websocket client
-    client = WebsocketConnection(url, logger)
-    yield from client.connect(app_id, app_key)
 
-    # Init Nuance communication
+    logger = logging.getLogger("pynuance").getChild("stt")
+
     audio_type = 'audio/x-speex;mode=wb'
-    client.send_message({
-        'message': 'connect',
-        'device_id': '55555500000000000000000000000000',
-        'codec': audio_type,
-    })
+    audio_type = "audio/opus;rate=%d" % recorder.rate
 
-    _, msg = yield from client.receive()
+    try:
+        yield from ncs_client.connect()
+        session = yield from ncs_client.init_session(user_id, device_id, codec=audio_type)
 
-    client.send_message({
-        'message': 'query_begin',
-        'transaction_id': 123,
-
-        'command': 'NVC_ASR_CMD',
-        'language': language,
         # https://developer.nuance.com/public/Help/SpeechKitFrameworkReference_Android/com/nuance/speechkit/RecognitionType.html
         # Should be "DICTATION", "SEARCH" or "TV"
-        'recognition_type': 'DICTATION',
-    })
+        transaction = yield from session.begin_transaction(command='NVC_ASR_CMD',
+                                                           language=language,
+                                                           recognition_type='DICTATION',
+                                                           )
 
-    connection_handshake(client)
+        audio_transfer = NCSAudioTransfer(id_=session.get_new_audio_id(), session=session)
+        yield from transaction.send_parameter(name='AUDIO_INFO', type_='audio',
+                                              value=audio_transfer.info)
 
-    audiotask = asyncio.ensure_future(recorder.dequeue())
+        # We end the transaction here, but we will only have a 'query_end' response
+        # back when the audio transfer and ASR/NLU are done.
+        yield from transaction.end(wait=False)
+        yield from audio_transfer.begin()
 
-    yield from listen_microphone(loop, client, recorder, audiotask, None, logger)
+        audiotask = asyncio.ensure_future(recorder.audio_queue.get())
 
-    recorder.stop()
+        recorder.start()
+        yield from listen_microphone(loop, audio_transfer,
+                                     recorder, audiotask, audio_type)
 
-    client.send_message({
-        'message': 'audio_end',
-        'audio_id': 456,
-    })
+        recorder.stop()
 
-    msg_list = []
-    while True:
-        _, msg = yield from client.receive()
-        logger.debug(msg)
+        audiotask.cancel()
+        yield from audio_transfer.end(wait=False)
+        message = yield from ncs_client.receive_json()
 
-        if msg['message'] == 'query_end':
-            break
-        else:
-            msg_list.append(msg)
+        yield from transaction.wait_for_query_end()
 
-    client.close()
+    finally:
+        yield from ncs_client.close()
 
-    return msg_list
+    return message
 
 
-def speech_to_text(app_id, app_key, language, logger=None):
+def speech_to_text(app_id, app_key, language):
     """Speech to text from mic and return result.
 
     This function auto detect a silence
     """
-    if logger is None:
-        logger = logging.getLogger("pynuance").getChild("stt")
+    # Prepare ncs client
+    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -81,12 +76,9 @@ def speech_to_text(app_id, app_key, language, logger=None):
     with Recorder(loop=loop) as recorder:
         output = loop.run_until_complete(do_recognize(
             loop,
-            "https://ws.dev.nuance.com/v1/",
-            app_id,
-            binascii.unhexlify(app_key),
+            ncs_client,
             language,
             recorder=recorder,
-            logger=logger,
             ))
         loop.stop()
     return output

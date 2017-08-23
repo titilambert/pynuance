@@ -1,8 +1,10 @@
-aiohttp==0.16.2
-asyncio==3.4.3
+aiohttp==2.2.0
+asyncio==3.4.3; python_version < '3.5'
+opuslib==1.1.0
+pyaudio==0.2.11
+yarl==0.10.3
 speex==0.9.1
 numpy==1.13.1
-PyAudio==0.2.8
 scikits.samplerate==0.3.3
 requests>=1.2.0
 beautifulsoup4==4.6.0

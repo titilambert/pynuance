@@ -11,12 +11,11 @@ Submodules
 
 .. toctree::
 
-   pynuance.__main__
    pynuance.cli
    pynuance.credentials
-   pynuance.libs
-   pynuance.logger
    pynuance.mix
+   pynuance.ncssession
+   pynuance.ncstransaction
    pynuance.nlu
    pynuance.recorder
    pynuance.stt
