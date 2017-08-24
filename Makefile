@@ -35,8 +35,7 @@ test-syntax:
 
 test-pytest:
 	rm -rf .coverage nosetest.xml nosetests.html htmlcov
-	env/bin/pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=pynuance/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests 
+	PYNUANCE_COOKIES=`pwd`/cookies.json PYNUANCE_CREDENTIALS=`pwd`/credentials.json env/bin/pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=pynuance/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests 
 	coverage combine || true
 	coverage report --include='*/pynuance/*'
 	# CODECLIMATE_REPO_TOKEN=${CODECLIMATE_REPO_TOKEN} codeclimate-test-reporter
-

@@ -107,6 +107,7 @@ def get_cookies(cookies_file, website):
     """Get cookies from saved file"""
     if website not in ("dev", "mix"):
         raise
+    # close the file it's readable
     with open(cookies_file) as fhc:
         raw_cookies = json.load(fhc)
     if website not in raw_cookies:

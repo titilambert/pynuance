@@ -1,11 +1,8 @@
 """Provides Natural Language Understanding functions"""
 
 import asyncio
-import binascii
 import logging
 import pyaudio
-
-import aiohttp
 
 from pynuance.libs.languages import NLU_LANGUAGES
 from pynuance.libs.error import PyNuanceError
@@ -18,11 +15,11 @@ FRAME_SIZE = 320
 SAMPLE_SIZE = pyaudio.get_sample_size(AUDIO_FORMAT)  # in bytes
 
 
-def understand_audio(app_id, app_key, context_tag, language, logger=None):
+def understand_audio(app_id, app_key, context_tag, language,
+                     user_id="pynuance_user", device_id="pynuance"):
     """NLU audio wrapper"""
+    logger = logging.getLogger("pynuance").getChild("nlu").getChild("audio")
     # transform language
-    if logger is None:
-        logger = logging.getLogger("pynuance").getChild("nlu").getChild("audio")
     nlu_language = NLU_LANGUAGES.get(language)
     if nlu_language is None:
         raise PyNuanceError("Language should be in "
@@ -38,18 +35,17 @@ def understand_audio(app_id, app_key, context_tag, language, logger=None):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    # TODO: change it to variable
-    user_id = "user1"
-
     interpretations = {}
     with Recorder(loop=loop) as recorder:
         interpretations = loop.run_until_complete(_nlu_audio(
                 ncs_client,
                 loop,
                 recorder,
-                user_id,
                 context_tag=context_tag,
-                language=nlu_language))
+                language=nlu_language,
+                user_id=user_id,
+                device_id=device_id,
+                ))
     # loop.close()
     if interpretations is False:
         # The user did not speak
@@ -59,18 +55,16 @@ def understand_audio(app_id, app_key, context_tag, language, logger=None):
 
 
 @asyncio.coroutine
-def _nlu_audio(ncs_client, loop, recorder, user_id, context_tag, language):
+def _nlu_audio(ncs_client, loop, recorder, context_tag, language,
+               user_id="pynuance_user", device_id="pynuance"):
     """Trying to understand audio"""
-    # Websocket client
     logger = logging.getLogger("pynuance").getChild("nlu").getChild("audio")
-
+    # Websocket client
     audio_type = "audio/opus;rate=%d" % recorder.rate
-
-    DEVICE_ID = 'device_id'
 
     try:
         yield from ncs_client.connect()
-        session = yield from ncs_client.init_session(user_id, DEVICE_ID, codec=audio_type)
+        session = yield from ncs_client.init_session(user_id, device_id, codec=audio_type)
         transaction = yield from session.begin_transaction(command='NDSP_ASR_APP_CMD',
                                                            language=language,
                                                            context_tag=context_tag)
@@ -104,7 +98,8 @@ def _nlu_audio(ncs_client, loop, recorder, user_id, context_tag, language):
     return message
 
 
-def understand_text(app_id, app_key, user_id, context_tag, text, language):
+def understand_text(app_id, app_key, context_tag, text, language,
+                    user_id="pynuance_user", device_id="pynuance"):
     """Nlu text wrapper"""
     logger = logging.getLogger("pynuance").getChild("nlu").getChild("text")
     # transform language
@@ -127,16 +122,18 @@ def understand_text(app_id, app_key, user_id, context_tag, text, language):
     # Run nlu text
     interpretations = loop.run_until_complete(_nlu_text(
         ncs_client,
-        user_id,
         context_tag=context_tag,
         text_to_understand=text,
-        language=nlu_language))
+        language=nlu_language,
+        user_id=user_id,
+        device_id=device_id))
 
     return interpretations
 
 
 @asyncio.coroutine
-def _nlu_text(ncs_client, user_id, context_tag, text_to_understand, language='eng-USA'):
+def _nlu_text(ncs_client, context_tag, text_to_understand, language='eng-USA',
+              user_id="pynuance_user", device_id="pynuance"):
     """Try to understand text"""
     request_info = {
         'dictionary': {
@@ -146,16 +143,14 @@ def _nlu_text(ncs_client, user_id, context_tag, text_to_understand, language='en
         },
     }
     try:
-        # TODO: change it to variable
-        DEVICE_ID = 'MIX_WS_PYTHON_SAMPLE_APP'
         yield from ncs_client.connect()
-        session = yield from ncs_client.init_session(user_id, DEVICE_ID)
+        session = yield from ncs_client.init_session(user_id, device_id)
         transaction = yield from session.begin_transaction(command='NDSP_APP_CMD',
                                                            language=language,
                                                            context_tag=context_tag)
         yield from transaction.send_parameter(name='REQUEST_INFO', type_='dictionary',
                                               value=request_info)
-        message = yield from transaction.end()
+        yield from transaction.end()
     finally:
         yield from ncs_client.close()
     return transaction.response

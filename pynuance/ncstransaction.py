@@ -65,9 +65,9 @@ class NCSTransaction:
         return(yield from self.client.send_json(message))
 
     @asyncio.coroutine
-    def wait_for_query_end(self, timeout=None, bytes=False):
+    def wait_for_query_end(self, timeout=None, is_bytes=False):
         while True:
-            if not bytes:
+            if not is_bytes:
                 message = yield from self.client.receive_json(timeout=timeout)
                 if message['message'] == 'query_response':
                     self.response = message

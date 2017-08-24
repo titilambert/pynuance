@@ -1,6 +1,5 @@
 """Provides Text-To-Speech functions"""
 import asyncio
-import binascii
 import logging
 
 import pyaudio
@@ -51,10 +50,10 @@ def _get_opus_decoder_func(decoder):
     return decoder_func
 
 
-def text_to_speech(app_id, app_key, language, voice, codec, text, logger=None):
+def text_to_speech(app_id, app_key, language, voice, codec, text,
+                 user_id="pynuance_user", device_id="pynuance"):
     """Read a text with a given language, voice and code"""
-    if logger is None:
-        logger = logging.getLogger("pynuance").getChild("tts")
+    logger = logging.getLogger("pynuance").getChild("tts")
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
     if language not in voices_by_lang:
         raise PyNuanceError("Language should be in "
@@ -74,14 +73,15 @@ def text_to_speech(app_id, app_key, language, voice, codec, text, logger=None):
         asyncio.set_event_loop(loop)
 
     loop.run_until_complete(do_synthesis(ncs_client, language, voice, codec,
-                                         text, logger=logger))
+                                         text, user_id, device_id))
     loop.stop()
 
 
 @asyncio.coroutine
-def do_synthesis(ncs_client, language, voice, codec,
-                 input_text, logger):
+def do_synthesis(ncs_client, language, voice, codec, input_text,
+                 user_id="pynuance_user", device_id="pynuance"):
     """The TTS function using Nuance Communications services"""
+    logger = logging.getLogger("pynuance").getChild("tts")
     audio_player = pyaudio.PyAudio()
 
     if codec == "speex" and speex is None:
@@ -116,7 +116,6 @@ def do_synthesis(ncs_client, language, voice, codec,
     elif audio_type == 'audio/opus;rate=16000':
         decoder = opus.decoder.create(16000, 1)
         decoder_func = _get_opus_decoder_func(decoder)
-
     else:
         # TODO raise Error
         print('ERROR: Need to implement encoding for %s!' % audio_type)
@@ -124,9 +123,8 @@ def do_synthesis(ncs_client, language, voice, codec,
 
     try:
         yield from ncs_client.connect()
-        DEVICE_ID = 'MIX_WS_PYTHON_SAMPLE_APP'
-        user_id = "35228eb1afb54a3f8ba83754445a197c"
-        session = yield from ncs_client.init_session(user_id, DEVICE_ID, codec=audio_type)
+
+        session = yield from ncs_client.init_session(user_id, device_id, codec=audio_type)
         transaction = yield from session.begin_transaction(command='NVC_TTS_CMD',
                                                            language=language,
                                                            tts_voice=voice,
@@ -138,12 +136,11 @@ def do_synthesis(ncs_client, language, voice, codec,
                         }
         yield from transaction.send_parameter(name='TEXT_TO_READ', type_='dictionary',
                                               value=request_info)
-        message = yield from transaction.end(wait=False)
-
+        yield from transaction.end(wait=False)
         # Get answer message 1
-        message = yield from ncs_client.receive_json()
+        yield from ncs_client.receive_json()
         # Get answer message 2
-        message = yield from ncs_client.receive_json()
+        yield from ncs_client.receive_json()
         # Read and play sound
         sound = yield from ncs_client.receive_bytes()
         if decoder_func is not None:
@@ -152,7 +149,7 @@ def do_synthesis(ncs_client, language, voice, codec,
         stream.write(sound)
         logger.info("End sentence")
         # Get answer message 3
-        message = yield from ncs_client.receive_json()
+        yield from ncs_client.receive_json()
     finally:
         # Close stream and client
         stream.stop_stream()

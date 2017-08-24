@@ -166,12 +166,11 @@ def upload_model(name, model_file, username=None, password=None, cookies_file=No
     model_id = get_model_id(name, username, password, cookies_file)
 
     # Send file
-    with open(model_file, 'rb') as fhm:
-        print("Sending: {}".format(model_file))
-        url = "https://developer.nuance.com/mix/nlu/api/v1/data/{}/import".format(model_id)
-        files = {'file': fhm}
-        requests.post(url, files=files,
-                      cookies=cookies)  # pylint: disable=E0602
+    print("Sending: {}".format(model_file.name))
+    url = "https://developer.nuance.com/mix/nlu/api/v1/data/{}/import".format(model_id)
+    files = {'file': model_file}
+    requests.post(url, files=files,
+                  cookies=cookies)  # pylint: disable=E0602
 
     # Save
     url = "https://developer.nuance.com/mix/nlu/api/v1/project/{}".format(model_id)

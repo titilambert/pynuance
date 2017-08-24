@@ -1,6 +1,5 @@
 """Provides Speech-To-Text functions"""
 import asyncio
-import binascii
 import logging
 
 from pynuance.websocket import NCSWebSocketClient
@@ -12,12 +11,10 @@ from pynuance.recorder import Recorder, listen_microphone
 def do_recognize(loop, ncs_client, language,  # pylint: disable=R0914,R0914
                  recorder, user_id="", device_id=""):
     """Main function for Speech-To-Text"""
-
     logger = logging.getLogger("pynuance").getChild("stt")
 
     audio_type = 'audio/x-speex;mode=wb'
     audio_type = "audio/opus;rate=%d" % recorder.rate
-
     try:
         yield from ncs_client.connect()
         session = yield from ncs_client.init_session(user_id, device_id, codec=audio_type)
@@ -55,6 +52,7 @@ def do_recognize(loop, ncs_client, language,  # pylint: disable=R0914,R0914
     finally:
         yield from ncs_client.close()
 
+    logger.debug(message)
     return message
 
 

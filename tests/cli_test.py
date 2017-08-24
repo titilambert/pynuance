@@ -3,6 +3,8 @@ import sys
 import time
 
 import pytest
+import click
+from click.testing import CliRunner
 
 from pynuance import cli
 from pynuance.__main__ import main
@@ -10,7 +12,6 @@ from pynuance.__main__ import main
 MIX_READY = False
 
 class TestUserHandling(object):
-
 
     def setup_method(self):
         self.username = os.environ.get("PYNUANCE_USERNAME")
@@ -21,197 +22,159 @@ class TestUserHandling(object):
         self.model_file = "tests/upload.trsx"
         self.context_tag = "ci_tag"
 
+    @classmethod
+    def teardown_class(cls):
+        cookies_file = os.environ.get("PYNUANCE_COOKIES")
+        model_name = "ci-model"
+        # Run command
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C', cookies_file,
+                                              'model', 'delete',
+                                              '-n', model_name])
+
+
     @pytest.mark.order1
     def test_get_credentials(self):
-        # Prepare command
-        sys.argv = ["pynuance", 'credentials',
-                    '-C', self.cookies_file,
-                    '-c', self.credentials_file,
-                    ]
-        # Run it
-        main()
-        # Check it
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['credentials', '-C',self.cookies_file,
+                    '-c', self.credentials_file ])
+        assert result.exit_code == 0
         assert os.path.isfile(self.credentials_file)
 
     @pytest.mark.order2
-    def test_mix_check(self, capsys):
+    def test_mix_check(self):
         global MIX_READY
-        # Prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'check',
-                    ]
-        # Run it
-        main()
-        out, err = capsys.readouterr()
-        if out == "Your Mix account is activated, you can use NLU\n":
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'check' ])
+        if result.output == "Your Mix account is activated, you can use NLU\n":
             # Mix ready
             assert True
             MIX_READY = True
         else:
             # Mix not ready
-            assert out == "Your Mix account is being created or is not requested\n"
+            assert result.output == "Your Mix account is being created or is not requested\n"
             MIX_READY = False
 
     @pytest.mark.order3
-    def test_mix_model_create(self, capsys):
+    def test_mix_model_create(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
         # Prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'create', '-l', 'en_US',
-                    ]
+        runner = CliRunner()
         # Run it
-        main()
-        out, err = capsys.readouterr()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file,
+                                              'model', 'create', '-n', self.model_name,
+                                              '-l', 'en_US',])
         # Check it
-        assert out.startswith("""Model "{}" created with ID: """.format(self.model_name))
+        assert result.output.startswith("""Model "{}" created with ID: """.format(self.model_name))
 
     @pytest.mark.order4
-    def test_mix_model_list(self, capsys):
+    def test_mix_model_list(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
         # Prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', 'list',
-                    ]
-        # Run it
-        main()
-        out, err = capsys.readouterr()
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'list' ])
         # Check it
-        assert out.find(" | {}".format(self.model_name)) != -1
+        assert result.output.find(" | {}".format(self.model_name)) != -1
 
     @pytest.mark.order5
-    def test_mix_model_upload(self, capsys):
+    def test_mix_model_upload(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
-        # prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'upload', '-M', 'tests/upload.trsx'
-                    ]
         # run it
-        main()
-        out, err = capsys.readouterr()
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'upload', '-n', self.model_name, '-M', 'tests/upload.trsx'])
         # check it 
-        assert out == ('''Sending: {}\nFile "{}" uploaded to model '''
-                       '''"{}"\n'''.format(self.model_file, self.model_file, self.model_name))
+        assert result.output == ('''Sending: {}\nFile "{}" uploaded to model '''
+                                 '''"{}"\n'''.format(self.model_file,
+                                                     self.model_file,
+                                                     self.model_name))
 
     @pytest.mark.order6
-    def test_mix_model_train(self, capsys):
+    def test_mix_model_train(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
-        # prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'train',
-                    ]
-        # run it
-        main()
-        out, err = capsys.readouterr()
+        # run command
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'train', '-n', self.model_name])
         # check it 
-        assert out == ('''Training: {}\nModel "{}" trained\n'''.format(self.model_name,
-                                                                       self.model_name))
+        assert result.output == ('''Training: {}\nModel "{}" trained\n'''.format(self.model_name,
+                                                                                 self.model_name))
         # Wait for 5 sec for model training
         time.sleep(5)
 
     @pytest.mark.order7
-    def test_mix_model_build_create(self, capsys):
+    def test_mix_model_build_create(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
-        # prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'build', 'create',
-                    ]
-        # run it
-        main()
-        out, err = capsys.readouterr()
+        # run command
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'build', '-n', self.model_name, 'create'])
         # check it 
-        assert out == ('New build created for model "{}"\n'.format(self.model_name))
+        assert result.output == ('New build created for model "{}"\n'.format(self.model_name))
         # Wait for 5 sec for model build creation
         time.sleep(5)
 
     @pytest.mark.order8
-    def test_mix_model_build_list(self, capsys):
+    def test_mix_model_build_list(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
-        # prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'build', 'list',
-                    ]
-        # run it
-        main()
-        out, err = capsys.readouterr()
+        # run command
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'build', '-n', self.model_name, 'list'])
         # check it 
-        assert out.find(" 1 | ") != -1
+        assert result.output.find(" 1 | ") != -1
 
     @pytest.mark.order9
-    def test_mix_model_build_attach(self, capsys):
+    def test_mix_model_build_attach(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
         # prepare command
-        sys.argv = ["pynuance", 'mix',
-                    '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
-                    'build', 'attach', '-T', self.context_tag
-                    ]
-        # run it
-        main()
-        out, err = capsys.readouterr()
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix', '-C',self.cookies_file, 'model', 'build', '-n', self.model_name, 'attach', '-t', self.context_tag])
         # check it 
-        assert out == ('The latest build of model "{}" is now attached to the "SandBox" App '
-                       'with context tag "{}"\n'.format(self.model_name, self.context_tag))
+        assert result.output == ('The latest build of model "{}" is now attached to the "SandBox" App '
+                                 'with context tag "{}"\n'.format(self.model_name, self.context_tag))
         # Wait for 5 sec for model build attachment
         time.sleep(5)
 
     @pytest.mark.order10
-    def test_mix_nlu_text(self, capsys):
+    def test_mix_nlu_text(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
         # Prepare command
-        sys.argv = ["pynuance", 'nlu',
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['nlu',
                     '-c', self.credentials_file,
                     '-l', 'en_US',
-                    '-T', self.context_tag,
+                    '-t', self.context_tag,
                     'text',
-                    '-t', "What time is it ?",
-                    ]
-         # Run it
-        main()
-        out, err = capsys.readouterr()
+                    '-T', "What time is it ?",
+                    ])
         # Check it
-        assert out.find("get_time") != -1
+        assert result.output.find("get_time") != -1
 
     @pytest.mark.order11
-    def test_mix_model_delete(self, capsys):
+    def test_mix_model_delete(self):
         # Test Mix account
         if not MIX_READY:
             pytest.skip("Mix account not ready")
         # Prepare command
-        sys.argv = ["pynuance", 'mix',
+        runner = CliRunner()
+        result = runner.invoke(cli.cli_main, ['mix',
                     '-C', self.cookies_file,
-                    'model', '-m', self.model_name,
+                    'model',
                     'delete',
-                    ]
-        # Run it
-        main()
-        out, err = capsys.readouterr()
+                     '-n', self.model_name,
+                    ])
         # Check it
-        assert out == """Model "{}" deleted\n""".format(self.model_name)
+        assert result.output == """Model "{}" deleted\n""".format(self.model_name)
