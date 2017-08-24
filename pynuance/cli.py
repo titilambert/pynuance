@@ -12,22 +12,22 @@ from pynuance import tts
 from pynuance import stt
 from pynuance.libs.languages import LANGUAGES
 from pynuance.libs.error import PyNuanceError
-from pynuance.libs.common import parse_credentials
 
 
 #################################
 # Validator functions
 #################################
-def _validate_voice(ctx, param, value):
+def _validate_voice(ctx, param, value):  # pylint: disable=W0613
     """Validate voice arguments"""
     language = ctx.params.get('language')
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
     if value not in voices_by_lang[language]:
-        raise click.BadParameter("Voice should be in {}".format(', '.join(voices_by_lang[language])))
+        raise click.BadParameter("Voice should be in "
+                                 "{}".format(', '.join(voices_by_lang[language])))
     return value
 
 
-def _validate_credentials_file(ctx, param, value):
+def _validate_credentials_file(ctx, param, value):  # pylint: disable=W0613
     """Validate crendentials file"""
     with open(value) as f_creds:
         cred_json = json.load(f_creds)
@@ -40,13 +40,6 @@ def _validate_credentials_file(ctx, param, value):
             }
 
 
-def _validate_model_name(ctx, param, value):
-    """Validate voice arguments"""
-    import ipdb;ipdb.set_trace()
-    raise click.BadParameter("Voice should be in {}".format(', '.join(voices_by_lang[language])))
-    return value
-
-    
 #################################
 # Cookies
 #################################
@@ -59,6 +52,7 @@ def cookies(cookies_file, username=None, password=None):
     """CLI function to save cookie on the disk."""
     credentials_.save_cookies(cookies_file, username, password)
     click.echo("Cookies saved in file {}".format(cookies_file))
+
 
 #################################
 # Credentials
@@ -85,6 +79,7 @@ def credentials(username=None, password=None, cookies_file=None, credentials_fil
             json.dump(creds, fhc)
         click.echo("Credentials saved in file {}".format(credentials_file))
 
+
 #################################
 # Mix
 #################################
@@ -102,7 +97,7 @@ def cli_mix(ctx, username=None, password=None, cookies_file=None):
     ctx.obj['cookies_file'] = cookies_file
 
 
-## Mix check
+# Mix check
 ############
 @click.command("check")
 @click.pass_context
@@ -117,12 +112,13 @@ def mix_check(ctx):
     else:
         click.echo("Your Mix account is being created or is not requested")
 
-## Mix model
+
+# Mix model
 ############
 @click.group("model")
 @click.pass_context
-def mix_model(ctx):
-    """Entrypoint function for cli"""
+def mix_model(ctx):  # pylint: disable=W0613
+    """Model subcommand"""
 
 
 @click.command("list")
@@ -142,12 +138,13 @@ def mix_list_models(ctx):
 @click.command("create")
 @click.option('--name', '-n', required=True, help="Model name")
 @click.option('--language', '-l', required=True, help="Language",
-               type=click.Choice([l['code'] for l in LANGUAGES.values()]))
+              type=click.Choice([l['code'] for l in LANGUAGES.values()]))
 @click.pass_context
 def mix_create_model(ctx, name, language):
     """Create a new model and print the result."""
     try:
-        model = mix.create_model(name, language, ctx.obj['username'], ctx.obj['password'], ctx.obj['cookies_file'])
+        model = mix.create_model(name, language, ctx.obj['username'],
+                                 ctx.obj['password'], ctx.obj['cookies_file'])
     except PyNuanceError as exp:
         click.echo("Error creating Mix model: {}".format(exp))
         sys.exit(1)
@@ -174,7 +171,8 @@ def mix_delete_model(ctx, name):
 def mix_upload_model(ctx, name, model_file):
     """Upload intent file into a Mix model and print the result."""
     try:
-        mix.upload_model(name, model_file, ctx.obj['username'], ctx.obj['password'], ctx.obj['cookies_file'])
+        mix.upload_model(name, model_file, ctx.obj['username'],
+                         ctx.obj['password'], ctx.obj['cookies_file'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
@@ -194,7 +192,7 @@ def mix_train_model(ctx, name):
     click.echo('Model "{}" trained'.format(name))
 
 
-### Mix build
+# Mix build
 #############
 @click.group("build")
 @click.option('--name', '-n', required=True, help="Model name")
@@ -210,7 +208,8 @@ def mix_model_build(ctx, name):
 def mix_model_build_create(ctx, notes):
     """Create a new model build and print the result."""
     try:
-        mix.model_build_create(ctx.obj['name'], notes, ctx.obj['username'], ctx.obj['password'], ctx.obj['cookies_file'])
+        mix.model_build_create(ctx.obj['name'], notes, ctx.obj['username'],
+                               ctx.obj['password'], ctx.obj['cookies_file'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
@@ -219,10 +218,11 @@ def mix_model_build_create(ctx, notes):
 
 @click.command("list")
 @click.pass_context
-def mix_model_build_list(ctx): 
+def mix_model_build_list(ctx):
     """List builds for a given model."""
     try:
-        builds = mix.model_build_list(ctx.obj['name'], ctx.obj['username'], ctx.obj['password'], ctx.obj['cookies_file'])
+        builds = mix.model_build_list(ctx.obj['name'], ctx.obj['username'],
+                                      ctx.obj['password'], ctx.obj['cookies_file'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
@@ -236,6 +236,7 @@ def mix_model_build_list(ctx):
             line = "{version:8d} | {build_status:20s} | {created_at} | {notes}".format(**build)
             click.echo(line)
 
+
 @click.command("attach")
 @click.option('--build-version', '-b', default=None, help="Build version")
 @click.option('--context-tag', '-t', default="latest", help="Context tag")
@@ -243,16 +244,17 @@ def mix_model_build_list(ctx):
 def mix_model_build_attach(ctx, build_version=None, context_tag="latest"):
     """Attach a build to the Sandbox App and print result."""
     try:
-        mix.model_build_attach(ctx.obj['name'], build_version, context_tag, ctx.obj['username'], ctx.obj['password'], ctx.obj['cookies_file'])
+        mix.model_build_attach(ctx.obj['name'], build_version, context_tag, ctx.obj['username'],
+                               ctx.obj['password'], ctx.obj['cookies_file'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
     if build_version is not None:
         click.echo('Build "{}" of model "{}" is now attached to the "SandBox" App '
-              'with context tag "{}"'.format(build_version, ctx.obj['name'], context_tag))
+                   'with context tag "{}"'.format(build_version, ctx.obj['name'], context_tag))
     else:
         click.echo('The latest build of model "{}" is now attached to the "SandBox" App '
-              'with context tag "{}"'.format(ctx.obj['name'], context_tag))
+                   'with context tag "{}"'.format(ctx.obj['name'], context_tag))
 
 
 #################################
@@ -264,7 +266,7 @@ def mix_model_build_attach(ctx, build_version=None, context_tag="latest"):
               callback=_validate_credentials_file,
               type=click.Path(file_okay=True, dir_okay=False, writable=True))
 @click.option('--language', '-l', required=True, help="Language",
-               type=click.Choice([l['code'] for l in LANGUAGES.values()]))
+              type=click.Choice([l['code'] for l in LANGUAGES.values()]))
 @click.pass_context
 def cli_nlu(ctx, context_tag, credentials_file, language):
     """Entrypoint function for cli"""
@@ -282,9 +284,8 @@ def nlu_text(ctx, text):
     """Try to understand a text and print the result."""
     try:
         # TODO add support for user speaking
-        print(ctx.obj['app_id'], ctx.obj['app_key'], ctx.obj['context_tag'], text, ctx.obj['language'])
-
-        result = nlu.understand_text(ctx.obj['app_id'], ctx.obj['app_key'], ctx.obj['context_tag'], text, ctx.obj['language'])
+        result = nlu.understand_text(ctx.obj['app_id'], ctx.obj['app_key'],
+                                     ctx.obj['context_tag'], text, ctx.obj['language'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
@@ -296,11 +297,13 @@ def nlu_text(ctx, text):
 def nlu_audio(ctx):
     """Try to understand audio from microphone and print the result."""
     try:
-        result = nlu.understand_audio(ctx.obj['app_id'], ctx.obj['app_key'], ctx.obj['context_tag'], ctx.obj['language'])
+        result = nlu.understand_audio(ctx.obj['app_id'], ctx.obj['app_key'],
+                                      ctx.obj['context_tag'], ctx.obj['language'])
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
     click.echo(json.dumps(result))
+
 
 #################################
 # TTS
@@ -310,15 +313,15 @@ def nlu_audio(ctx):
               callback=_validate_credentials_file,
               type=click.Path(file_okay=True, dir_okay=False, writable=True))
 @click.option('--language', '-l', required=True, help="Language",
-               type=click.Choice([l['code'] for l in LANGUAGES.values()]))
-@click.option('--codec', '-d', required=True, help="codec", type=click.Choice(["speex", "opus", "l16"]))
+              type=click.Choice([l['code'] for l in LANGUAGES.values()]))
+@click.option('--codec', '-d', required=True, help="codec",
+              type=click.Choice(["speex", "opus", "l16"]))
 @click.option('--voice', '-v', required=True, help="voice", callback=_validate_voice)
 @click.option('--text', '-t', required=True, help="text")
 def text_to_speech(credentials_file, language, voice, codec, text):
     """Read a text with a given language, voice and code and print result."""
-    cred_json = json.load(credentials_file)
     try:
-        tts.text_to_speech(cred_json["appId"], cred_json["appKey"], language, voice, codec, text)
+        tts.text_to_speech(credentials_file["appId"], credentials_file["appKey"], language, voice, codec, text)
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
@@ -333,12 +336,16 @@ def text_to_speech(credentials_file, language, voice, codec, text):
               callback=_validate_credentials_file,
               type=click.Path(file_okay=True, dir_okay=False, writable=True))
 @click.option('--language', '-l', required=True, help="Language",
-               type=click.Choice([l['code'] for l in LANGUAGES.values()]))
+              type=click.Choice([l['code'] for l in LANGUAGES.values()]))
 @click.option('--best-result/--all-result', '-a', default=False, help="Print all results")
 @click.option('--raw', '-r', default=False, help="Print raw results in json format (imply --all)")
 def speech_to_text(credentials_file, language, best_result=False, raw=False):
     """Speech to text from mic and print result."""
-    cred_json = json.load(credentials_file)
+    try:
+        result = stt.speech_to_text(credentials_file["appId"], credentials_file["appKey"], language)
+    except PyNuanceError as exp:
+        print("Error: {}".format(exp))
+        sys.exit(1)
     if raw:
         click.echo(json.dumps(result))
     elif not result or not result.get("transcriptions"):

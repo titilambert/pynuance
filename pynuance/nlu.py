@@ -81,6 +81,7 @@ def _nlu_audio(ncs_client, loop, recorder, context_tag, language,
         audiotask = asyncio.ensure_future(recorder.audio_queue.get())
 
         recorder.start()
+        logger.debug("Start listening")
         yield from listen_microphone(loop, audio_transfer,
                                      recorder, audiotask, audio_type)
         recorder.stop()

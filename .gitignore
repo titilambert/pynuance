@@ -9,3 +9,4 @@ pytest/
 .coverage.*
 .cache/
 dist/
+.coverage

@@ -51,7 +51,7 @@ def _get_opus_decoder_func(decoder):
 
 
 def text_to_speech(app_id, app_key, language, voice, codec, text,
-                 user_id="pynuance_user", device_id="pynuance"):
+                   user_id="pynuance_user", device_id="pynuance"):
     """Read a text with a given language, voice and code"""
     logger = logging.getLogger("pynuance").getChild("tts")
     voices_by_lang = dict([(l['code'], l['voice']) for l in LANGUAGES.values()])
@@ -90,6 +90,8 @@ def do_synthesis(ncs_client, language, voice, codec, input_text,
     elif codec == "opus" and opus is None:
         print('ERROR: Opus encoding specified but python-opuslib module unavailable')
         return
+    print(opus)
+    print(codec)
 
     if codec == "speex":
         audio_type = 'audio/x-speex;mode=wb'
