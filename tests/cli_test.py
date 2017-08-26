@@ -36,7 +36,7 @@ class TestUserHandling(object):
     @pytest.mark.order1
     def test_get_credentials(self):
         runner = CliRunner()
-        result = runner.invoke(cli.cli_main, ['credentials', '-C',self.cookies_file,
+        result = runner.invoke(cli.cli_main, ['credentials', '-C', self.cookies_file,
                     '-c', self.credentials_file ])
         assert result.exit_code == 0
         assert os.path.isfile(self.credentials_file)

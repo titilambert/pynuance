@@ -90,8 +90,6 @@ def do_synthesis(ncs_client, language, voice, codec, input_text,
     elif codec == "opus" and opus is None:
         print('ERROR: Opus encoding specified but python-opuslib module unavailable')
         return
-    print(opus)
-    print(codec)
 
     if codec == "speex":
         audio_type = 'audio/x-speex;mode=wb'

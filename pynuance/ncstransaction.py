@@ -1,7 +1,9 @@
+"""Module defining Nuance Communications Services (NCS) Transaction"""
 import asyncio
 
 
 class NCSTransaction:
+    """Class defining NCS transaction"""
 
     BEGIN_MESSAGE = 'query_begin'
     END_MESSAGE = 'query_end'
@@ -66,6 +68,7 @@ class NCSTransaction:
 
     @asyncio.coroutine
     def wait_for_query_end(self, timeout=None, is_bytes=False):
+        """Wait for "end" query meaning end of communication """
         while True:
             if not is_bytes:
                 message = yield from self.client.receive_json(timeout=timeout)
@@ -101,4 +104,5 @@ class NCSAudioTransfer(NCSTransaction):
 
     @asyncio.coroutine
     def send_bytes(self, bytes_, *args, **kwargs):
+        """Send audio data"""
         yield from self.client.send_bytes(bytes_, *args, **kwargs)

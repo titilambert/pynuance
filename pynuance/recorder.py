@@ -175,10 +175,12 @@ class Recorder:
             self._audio.terminate()
 
     def callback(self, in_data, *_args):  # pylint: disable=W0613
+        """Stream callback"""
         asyncio.run_coroutine_threadsafe(self.audio_queue.put(in_data), self._loop)
         return (None, pyaudio.paContinue)
 
     def pick_default_device_index(self):
+        """Get default audio device"""
         try:
             device_info = self._audio.get_default_input_device_info()
             return device_info['index']

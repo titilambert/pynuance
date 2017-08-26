@@ -321,7 +321,8 @@ def nlu_audio(ctx):
 def text_to_speech(credentials_file, language, voice, codec, text):
     """Read a text with a given language, voice and code and print result."""
     try:
-        tts.text_to_speech(credentials_file["appId"], credentials_file["appKey"], language, voice, codec, text)
+        tts.text_to_speech(credentials_file["appId"], credentials_file["appKey"],
+                           language, voice, codec, text)
     except PyNuanceError as exp:
         click.echo("Error: {}".format(exp))
         sys.exit(1)
