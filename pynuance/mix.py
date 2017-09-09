@@ -165,10 +165,19 @@ def upload_model(name, model_file, username=None, password=None, cookies_file=No
     # Get model ID
     model_id = get_model_id(name, username, password, cookies_file)
 
+    # TODO replace print by logger
+    if hasattr(model_file, 'name'):
+        print("Sending: {}".format(model_file.name))
+
+    # Get data
+    if hasattr(model_file, 'read'):
+        model_data = model_file.read()
+    else:
+        model_data = model_file
+
     # Send file
-    print("Sending: {}".format(model_file.name))
     url = "https://developer.nuance.com/mix/nlu/api/v1/data/{}/import".format(model_id)
-    files = {'file': model_file}
+    files = {'file': model_data}
     requests.post(url, files=files,
                   cookies=cookies)  # pylint: disable=E0602
 
@@ -182,6 +191,7 @@ def upload_model(name, model_file, username=None, password=None, cookies_file=No
 @nuance_login("mix")
 def train_model(name, username=None, password=None, cookies_file=None):
     """Train a given Mix Model"""
+    # TODO replace print by logger
     print("Training: {}".format(name))
     # Get model ID
     model_id = get_model_id(name, username, password, cookies_file)
