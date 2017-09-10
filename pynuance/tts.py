@@ -139,17 +139,22 @@ def do_synthesis(ncs_client, language, voice, codec, input_text,
         yield from transaction.end(wait=False)
         # Get answer message 1
         yield from ncs_client.receive_json()
-        # Get answer message 2
-        yield from ncs_client.receive_json()
-        # Read and play sound
-        sound = yield from ncs_client.receive_bytes()
-        if decoder_func is not None:
-            sound = decoder_func(sound)
-        logger.info("Start sentence")
-        stream.write(sound)
-        logger.info("End sentence")
-        # Get answer message 3
-        yield from ncs_client.receive_json()
+        # Check if we have a sound
+        response = yield from ncs_client.receive_json()
+        while response.get('message') == 'audio':
+            # Read and play sound
+            sound = yield from ncs_client.receive_bytes()
+            if decoder_func is not None:
+                sound = decoder_func(sound)
+            logger.info("Start sentence")
+            stream.write(sound)
+            logger.info("End sentence")
+            # Check if we have an other sound
+            response = yield from ncs_client.receive_json()
+            # response.get('message') == 'audio'
+            # => New sound
+            # response.get('message') == 'audio_end'
+            # => No new sound
     finally:
         # Close stream and client
         stream.stop_stream()
