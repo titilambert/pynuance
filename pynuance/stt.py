@@ -72,11 +72,20 @@ def speech_to_text(app_id, app_key, language):
         asyncio.set_event_loop(loop)
 
     with Recorder(loop=loop) as recorder:
-        output = loop.run_until_complete(do_recognize(
-            loop,
-            ncs_client,
-            language,
-            recorder=recorder,
-            ))
-        loop.stop()
+        if loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(do_recognize(loop,
+                                                                   ncs_client,
+                                                                   language,
+                                                                   recorder=recorder,
+                                                                   ),
+                                                      loop),
+            output = future.result()
+        else:
+            output = loop.run_until_complete(do_recognize(
+                loop,
+                ncs_client,
+                language,
+                recorder=recorder,
+                ))
+            loop.stop()
     return output

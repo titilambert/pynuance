@@ -37,7 +37,19 @@ def understand_audio(app_id, app_key, context_tag, language,
 
     interpretations = {}
     with Recorder(loop=loop) as recorder:
-        interpretations = loop.run_until_complete(_nlu_audio(
+        if loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(_nlu_audio(ncs_client,
+                                                                 loop,
+                                                                 recorder,
+                                                                 context_tag=context_tag,
+                                                                 language=nlu_language,
+                                                                 user_id=user_id,
+                                                                 device_id=device_id,
+                                                                 ),
+                                                      loop)
+            interpretations = future.result()
+        else:
+            interpretations = loop.run_until_complete(_nlu_audio(
                 ncs_client,
                 loop,
                 recorder,
@@ -46,7 +58,8 @@ def understand_audio(app_id, app_key, context_tag, language,
                 user_id=user_id,
                 device_id=device_id,
                 ))
-    # loop.close()
+            loop.stop()
+    # .close()
     if interpretations is False:
         # The user did not speak
         return {}
@@ -120,14 +133,25 @@ def understand_text(app_id, app_key, context_tag, text, language,
         logger.debug("Get New event loop")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+
     # Run nlu text
-    interpretations = loop.run_until_complete(_nlu_text(
-        ncs_client,
-        context_tag=context_tag,
-        text_to_understand=text,
-        language=nlu_language,
-        user_id=user_id,
-        device_id=device_id))
+    if loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(_nlu_text(ncs_client,
+                                                            context_tag=context_tag,
+                                                            text_to_understand=text,
+                                                            language=nlu_language,
+                                                            user_id=user_id,
+                                                            device_id=device_id),
+                                                  loop)
+        interpretations = future.result()
+    else:
+        interpretations = loop.run_until_complete(_nlu_text(
+            ncs_client,
+            context_tag=context_tag,
+            text_to_understand=text,
+            language=nlu_language,
+            user_id=user_id,
+            device_id=device_id))
 
     return interpretations
 

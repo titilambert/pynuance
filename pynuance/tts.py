@@ -72,9 +72,21 @@ def text_to_speech(app_id, app_key, language, voice, codec, text,
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(do_synthesis(ncs_client, language, voice, codec,
-                                         text, user_id, device_id))
-    loop.stop()
+
+    if loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(do_synthesis(ncs_client,
+                                                               language,
+                                                               voice,
+                                                               codec,
+                                                               text,
+                                                               user_id,
+                                                               device_id),
+                                                  loop),
+        future.result()
+    else:
+        loop.run_until_complete(do_synthesis(ncs_client, language, voice, codec,
+                                             text, user_id, device_id))
+        loop.stop()
 
 
 @asyncio.coroutine
