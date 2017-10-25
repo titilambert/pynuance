@@ -16,6 +16,7 @@ except ImportError:
 from pynuance.websocket import NCSWebSocketClient
 from pynuance.libs.languages import LANGUAGES
 from pynuance.libs.error import PyNuanceError
+from pynuance.libs.common import WS_V1_URL
 
 AUDIO_TYPES = [
     'audio/x-speex;mode=wb',
@@ -63,7 +64,7 @@ def text_to_speech(app_id, app_key, language, voice, codec, text,
                             "{}".format(', '.join(voices_by_lang[language])))
 
     # Prepare ncs client
-    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+    ncs_client = NCSWebSocketClient(WS_V1_URL, app_id, app_key)
 
     try:
         loop = asyncio.get_event_loop()

@@ -4,6 +4,8 @@ from pynuance.libs.error import PyNuanceError
 
 
 CODECS = ('wav', 'speex', 'opus')
+WS_V1_URL = "https://ws.dev.nuance.com/v1"
+WS_V2_URL = "https://ws.dev.nuance.com/v2"
 
 
 def parse_credentials(file_path):

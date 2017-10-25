@@ -5,6 +5,7 @@ import logging
 from pynuance.websocket import NCSWebSocketClient
 from pynuance.ncstransaction import NCSAudioTransfer
 from pynuance.recorder import Recorder, listen_microphone
+from pynuance.libs.common import WS_V1_URL
 
 
 @asyncio.coroutine
@@ -62,7 +63,7 @@ def speech_to_text(app_id, app_key, language):
     This function auto detect a silence
     """
     # Prepare ncs client
-    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+    ncs_client = NCSWebSocketClient(WS_V1_URL, app_id, app_key)
 
     try:
         loop = asyncio.get_event_loop()

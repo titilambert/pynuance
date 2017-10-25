@@ -9,6 +9,7 @@ from pynuance.libs.error import PyNuanceError
 from pynuance.recorder import Recorder, listen_microphone
 from pynuance.websocket import NCSWebSocketClient
 from pynuance.ncstransaction import NCSAudioTransfer
+from pynuance.libs.common import WS_V1_URL
 
 AUDIO_FORMAT = pyaudio.paInt16
 FRAME_SIZE = 320
@@ -26,7 +27,7 @@ def understand_audio(app_id, app_key, context_tag, language,
                             "{}".format(", ".join(NLU_LANGUAGES.keys())))
 
     # Prepare ncs client
-    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+    ncs_client = NCSWebSocketClient(WS_V1_URL, app_id, app_key)
 
     try:
         loop = asyncio.get_event_loop()
@@ -124,7 +125,7 @@ def understand_text(app_id, app_key, context_tag, text, language,
 
     logger.debug("Text received: {}".format(text))
     # Prepare ncs client
-    ncs_client = NCSWebSocketClient("https://ws.dev.nuance.com/ws/v1/", app_id, app_key)
+    ncs_client = NCSWebSocketClient(WS_V1_URL, app_id, app_key)
 
     # Get asyncio Loop
     try:
