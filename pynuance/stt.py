@@ -80,7 +80,7 @@ def speech_to_text(app_id, app_key, language):
                                                                    recorder=recorder,
                                                                    ),
                                                       loop),
-            output = future.result()
+            output = future.result()  # pylint: disable=E1101
         else:
             output = loop.run_until_complete(do_recognize(
                 loop,
