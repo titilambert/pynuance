@@ -79,8 +79,8 @@ def speech_to_text(app_id, app_key, language):
                                                                    language,
                                                                    recorder=recorder,
                                                                    ),
-                                                      loop),
-            output = future.result()  # pylint: disable=E1101
+                                                      loop)
+            output = future.result()
         else:
             output = loop.run_until_complete(do_recognize(
                 loop,

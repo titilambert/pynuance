@@ -81,8 +81,8 @@ def text_to_speech(app_id, app_key, language, voice, codec, text,
                                                                text,
                                                                user_id,
                                                                device_id),
-                                                  loop),
-        future.result()  # pylint: disable=E1101
+                                                  loop)
+        future.result()
     else:
         loop.run_until_complete(do_synthesis(ncs_client, language, voice, codec,
                                              text, user_id, device_id))
